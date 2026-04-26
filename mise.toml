@@ -8,10 +8,19 @@ node = "latest"
 description = "dev-backend"
 dir = "backend"
 run = """
-  watchexec -w src -r --stop-timeout 0 -- gleam run
+  mise run dev
+"""
+
+[tasks.dev-frontend]
+description = "dev-frontend"
+dir = "frontend"
+run = """
+  mise run dev
 """
 
 [tasks.gen]
-description = "Generate Gleam types from openapi.yaml"
-dir = "scripts"
-run = "node gen_gleam.ts"
+description = "Generate code from openapi.yaml"
+run = """
+  node scripts/gen_gleam.ts
+  cd frontend && pnpm gen
+"""

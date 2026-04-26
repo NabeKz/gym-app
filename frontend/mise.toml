@@ -1,0 +1,9 @@
+[tools]
+node = "latest"
+pnpm = "latest"
+
+[tasks.dev]
+description = "dev"
+run = """
+  pnpm dev
+"""

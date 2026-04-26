@@ -3,11 +3,12 @@ import { vstack } from "styled-system/patterns"
 export const Page = () => {
   return (
     <div className={container}>
-      <div>aaa</div>
+      <header className="">
+        <h1>lesson</h1>
+      </header>
+      <div>this is lessons</div>
     </div>
   )
 }
 
-const container = vstack({
-  paddingBlock: "sm",
-})
+const container = vstack({})

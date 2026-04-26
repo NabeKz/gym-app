@@ -1,6 +1,34 @@
 // This file is auto-generated from openapi.yaml. Do not edit manually.
 import gleam/json
 import gleam/option.{type Option}
+import gleam/time/calendar
+import gleam/time/timestamp.{type Timestamp}
+
+pub type Lesson {
+  Lesson(
+    id: String,
+    name: String,
+    instructor: String,
+    starts_at: Timestamp,
+    ends_at: Timestamp,
+    capacity: Int,
+    remaining_slots: Int,
+    description: Option(String),
+  )
+}
+
+pub fn encode_lesson(value: Lesson) -> json.Json {
+  json.object([
+    #("id", json.string(value.id)),
+    #("name", json.string(value.name)),
+    #("instructor", json.string(value.instructor)),
+    #("startsAt", json.string(timestamp.to_rfc3339(value.starts_at, calendar.utc_offset))),
+    #("endsAt", json.string(timestamp.to_rfc3339(value.ends_at, calendar.utc_offset))),
+    #("capacity", json.int(value.capacity)),
+    #("remainingSlots", json.int(value.remaining_slots)),
+    #("description", json.nullable(value.description, json.string)),
+  ])
+}
 
 pub type Exercise {
   Exercise(

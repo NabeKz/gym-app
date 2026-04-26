@@ -7,14 +7,24 @@ const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 type Schema = {
   type?: string | string[];
+  format?: string;
   properties?: Record<string, Schema>;
   required?: string[];
   items?: Schema;
   $ref?: string;
 };
 
+type PathItem = {
+  requestBody?: {
+    content?: {
+      "application/json"?: { schema?: Schema };
+    };
+  };
+};
+
 type Spec = {
   components?: { schemas?: Record<string, Schema> };
+  paths?: Record<string, PathItem & Record<string, PathItem>>;
 };
 
 const refName = (ref: string) => ref.split("/").pop()!;
@@ -22,7 +32,6 @@ const refName = (ref: string) => ref.split("/").pop()!;
 const toSnakeCase = (s: string) =>
   s.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
 
-// 3.1: type が ["string", "null"] のような配列の場合に null を除いた実型を返す
 function scalarType(schema: Schema): string {
   const types = Array.isArray(schema.type) ? schema.type : [schema.type ?? ""];
   return types.find((t) => t !== "null") ?? "";
@@ -40,7 +49,7 @@ function gleamType(schema: Schema, isRequired: boolean): string {
     base = `List(${gleamType(schema.items!, true)})`;
   } else {
     const map: Record<string, string> = {
-      string: "String",
+      string: schema.format === "date-time" ? "Timestamp" : "String",
       integer: "Int",
       number: "Float",
       boolean: "Bool",
@@ -50,12 +59,17 @@ function gleamType(schema: Schema, isRequired: boolean): string {
   return isRequired && !isNullable(schema) ? base : `Option(${base})`;
 }
 
+// --- encoder ---
+
 function encodeExpr(schema: Schema, accessor: string, isRequired: boolean): string {
   const inner = (s: Schema, acc: string): string => {
     if (s.$ref) return `encode_${toSnakeCase(refName(s.$ref))}(${acc})`;
     if (scalarType(s) === "array") {
       const itemEnc = inner(s.items!, "item");
       return `json.array(${acc}, fn(item) { ${itemEnc} })`;
+    }
+    if (scalarType(s) === "string" && s.format === "date-time") {
+      return `json.string(timestamp.to_rfc3339(${acc}, calendar.utc_offset))`;
     }
     const map: Record<string, string> = {
       string: `json.string(${acc})`,
@@ -67,9 +81,8 @@ function encodeExpr(schema: Schema, accessor: string, isRequired: boolean): stri
   };
 
   if (!isRequired || isNullable(schema)) {
-    // シンプルな型はショートハンド形式を使う
     const shorthand: Record<string, string> = {
-      string: "json.string",
+      ...(schema.format !== "date-time" ? { string: "json.string" } : {}),
       integer: "json.int",
       number: "json.float",
       boolean: "json.bool",
@@ -82,7 +95,7 @@ function encodeExpr(schema: Schema, accessor: string, isRequired: boolean): stri
   return inner(schema, accessor);
 }
 
-function generateBlock(name: string, schema: Schema): string {
+function generateEncoderBlock(name: string, schema: Schema): string {
   const required = new Set(schema.required ?? []);
   const props = Object.entries(schema.properties ?? {});
 
@@ -106,6 +119,77 @@ function generateBlock(name: string, schema: Schema): string {
   return `${typeDef}\n\n${encoderFn}`;
 }
 
+// --- decoder ---
+
+// リクエストの date-time は JSON 上は文字列なので String として扱う
+function gleamTypeForRequest(schema: Schema, isRequired: boolean): string {
+  let base: string;
+  if (schema.$ref) {
+    base = refName(schema.$ref);
+  } else if (scalarType(schema) === "array") {
+    base = `List(${gleamTypeForRequest(schema.items!, true)})`;
+  } else {
+    const map: Record<string, string> = {
+      string: "String",
+      integer: "Int",
+      number: "Float",
+      boolean: "Bool",
+    };
+    base = map[scalarType(schema)] ?? "Nil";
+  }
+  return isRequired && !isNullable(schema) ? base : `Option(${base})`;
+}
+
+function decoderExpr(schema: Schema): string {
+  if (schema.$ref) return `decode_${toSnakeCase(refName(schema.$ref))}()`;
+  if (scalarType(schema) === "array") {
+    return `decode.list(${decoderExpr(schema.items!)})`;
+  }
+  const map: Record<string, string> = {
+    string: "decode.string",
+    integer: "decode.int",
+    number: "decode.float",
+    boolean: "decode.bool",
+  };
+  return map[scalarType(schema)] ?? "decode.dynamic";
+}
+
+function generateDecoderBlock(name: string, schema: Schema): string {
+  const required = new Set(schema.required ?? []);
+  const props = Object.entries(schema.properties ?? {});
+
+  const fields = props
+    .map(([k, s]) => `    ${toSnakeCase(k)}: ${gleamTypeForRequest(s, required.has(k))}`)
+    .join(",\n");
+
+  const typeDef = `pub type ${name} {\n  ${name}(\n${fields},\n  )\n}`;
+
+  const fieldLines = props.map(([k, s]) => {
+    const snk = toSnakeCase(k);
+    const inner = decoderExpr(s);
+    if (!required.has(k) || isNullable(s)) {
+      const innerDecoder = isNullable(s) ? `decode.optional(${inner})` : inner;
+      return `    use ${snk} <- decode.optional_field("${k}", option.None, ${innerDecoder})`;
+    }
+    return `    use ${snk} <- decode.field("${k}", ${inner})`;
+  });
+
+  const constructorArgs = props
+    .map(([k]) => `      ${toSnakeCase(k)}:`)
+    .join(",\n");
+
+  const decoderFn =
+    `pub fn decode_${toSnakeCase(name)}(json_string: String) -> Result(${name}, json.DecodeError) {\n` +
+    `  json.parse(json_string, {\n` +
+    fieldLines.join("\n") + "\n" +
+    `    decode.success(${name}(\n${constructorArgs},\n    ))\n` +
+    `  })\n}`;
+
+  return `${typeDef}\n\n${decoderFn}`;
+}
+
+// --- helpers ---
+
 function hasOptionalFields(schemas: Record<string, Schema>): boolean {
   return Object.values(schemas).some((schema) => {
     const required = new Set(schema.required ?? []);
@@ -115,10 +199,30 @@ function hasOptionalFields(schemas: Record<string, Schema>): boolean {
   });
 }
 
-// main
-const specPath = join(rootDir, "openapi", "openapi.yaml");
-const outPath = join(rootDir, "backend", "src", "generated", "responses.gleam");
+function hasDateTimeFields(schemas: Record<string, Schema>): boolean {
+  return Object.values(schemas).some((schema) =>
+    Object.values(schema.properties ?? {}).some(
+      (s) => scalarType(s) === "string" && s.format === "date-time"
+    )
+  );
+}
 
+function collectRequestSchemaNames(spec: Spec): Set<string> {
+  const names = new Set<string>();
+  for (const pathItem of Object.values(spec.paths ?? {})) {
+    for (const method of ["get", "post", "put", "patch", "delete"] as const) {
+      const op = pathItem[method];
+      const ref =
+        op?.requestBody?.content?.["application/json"]?.schema?.$ref;
+      if (ref) names.add(refName(ref));
+    }
+  }
+  return names;
+}
+
+// --- main ---
+
+const specPath = join(rootDir, "docs", "openapi.yaml");
 const spec = load(readFileSync(specPath, "utf8")) as Spec;
 const schemas = spec.components?.schemas ?? {};
 
@@ -126,23 +230,59 @@ const objectSchemas = Object.entries(schemas).filter(
   ([, s]) => s.type === "object" && s.properties
 );
 
-const blocks = objectSchemas.map(([name, schema]) => generateBlock(name, schema));
+// responses.gleam
+const requestSchemaNames = collectRequestSchemaNames(spec);
+const responseSchemas = objectSchemas.filter(([name]) => !requestSchemaNames.has(name));
+const responseBlocks = responseSchemas.map(([name, schema]) => generateEncoderBlock(name, schema));
 
-const imports = [
+const responseImports = [
   "import gleam/json",
-  hasOptionalFields(schemas) ? "import gleam/option.{type Option}" : null,
+  hasOptionalFields(Object.fromEntries(responseSchemas)) ? "import gleam/option.{type Option}" : null,
+  hasDateTimeFields(Object.fromEntries(responseSchemas)) ? "import gleam/time/calendar" : null,
+  hasDateTimeFields(Object.fromEntries(responseSchemas)) ? "import gleam/time/timestamp.{type Timestamp}" : null,
 ]
   .filter(Boolean)
   .join("\n");
 
-const content = [
-  "// This file is auto-generated from openapi.yaml. Do not edit manually.",
-  imports,
-  "",
-  blocks.join("\n\n"),
-  "",
-].join("\n");
+const responsesPath = join(rootDir, "backend", "src", "generated", "responses.gleam");
+mkdirSync(dirname(responsesPath), { recursive: true });
+writeFileSync(
+  responsesPath,
+  [
+    "// This file is auto-generated from openapi.yaml. Do not edit manually.",
+    responseImports,
+    "",
+    responseBlocks.join("\n\n"),
+    "",
+  ].join("\n")
+);
+console.log(`Generated ${responseBlocks.length} response schemas → ${responsesPath}`);
 
-mkdirSync(dirname(outPath), { recursive: true });
-writeFileSync(outPath, content);
-console.log(`Generated ${blocks.length} schemas → ${outPath}`);
+// requests.gleam
+const requestSchemas = objectSchemas.filter(([name]) => requestSchemaNames.has(name));
+
+if (requestSchemas.length > 0) {
+  const requestBlocks = requestSchemas.map(([name, schema]) => generateDecoderBlock(name, schema));
+
+  const hasOptional = hasOptionalFields(Object.fromEntries(requestSchemas));
+  const requestImports = [
+    "import gleam/dynamic/decode",
+    "import gleam/json",
+    hasOptional ? "import gleam/option.{type Option}" : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const requestsPath = join(rootDir, "backend", "src", "generated", "requests.gleam");
+  writeFileSync(
+    requestsPath,
+    [
+      "// This file is auto-generated from openapi.yaml. Do not edit manually.",
+      requestImports,
+      "",
+      requestBlocks.join("\n\n"),
+      "",
+    ].join("\n")
+  );
+  console.log(`Generated ${requestBlocks.length} request schemas → ${requestsPath}`);
+}

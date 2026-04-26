@@ -1,4 +1,12 @@
 [tools]
+atlas = "latest"
 erlang = "latest"
 gleam = "latest"
 rebar = "latest"
+watchexec = "latest"
+
+[tasks.dev]
+description = "dev"
+run = """
+  watchexec -w src -r --stop-timeout 0 -- gleam run
+"""
