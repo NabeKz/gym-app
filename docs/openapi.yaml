@@ -1,0 +1,4 @@
+paths:
+  /lessons:
+    get:
+      status: 200

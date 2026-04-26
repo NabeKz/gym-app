@@ -1,0 +1,68 @@
+openapi: "3.1.0"
+info:
+  title: Gym App API
+  version: "1.0.0"
+
+paths: {}
+
+components:
+  schemas:
+    Exercise:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        muscleGroup:
+          type: ["string", "null"]
+
+    WorkoutSet:
+      type: object
+      required:
+        - id
+        - reps
+      properties:
+        id:
+          type: integer
+        reps:
+          type: integer
+        weightKg:
+          type: ["number", "null"]
+
+    WorkoutExercise:
+      type: object
+      required:
+        - id
+        - exercise
+        - sets
+      properties:
+        id:
+          type: integer
+        exercise:
+          $ref: "#/components/schemas/Exercise"
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutSet"
+
+    Workout:
+      type: object
+      required:
+        - id
+        - date
+        - exercises
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+        notes:
+          type: ["string", "null"]
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutExercise"

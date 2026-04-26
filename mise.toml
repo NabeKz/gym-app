@@ -1,0 +1,17 @@
+[tools]
+jq = "latest"
+pnpm = "latest"
+watchexec = "latest"
+node = "latest"
+
+[tasks.dev-backend]
+description = "dev-backend"
+dir = "backend"
+run = """
+  watchexec -w src -r --stop-timeout 0 -- gleam run
+"""
+
+[tasks.gen]
+description = "Generate Gleam types from openapi.yaml"
+dir = "scripts"
+run = "node gen_gleam.ts"
