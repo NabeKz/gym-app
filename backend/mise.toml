@@ -1,5 +1,6 @@
 [tools]
 atlas = "latest"
+dotenvx = "latest"
 erlang = "latest"
 gleam = "latest"
 rebar = "latest"
@@ -8,5 +9,13 @@ watchexec = "latest"
 [tasks.dev]
 description = "dev"
 run = """
-  watchexec -w src -r --stop-timeout 0 -- gleam run
+  dotenvx run -f .env.development -- watchexec -w src -r --stop-timeout 0 -- gleam run
 """
+
+[tasks.db-apply]
+description = "Apply schema to database (declarative migration)"
+run = "dotenvx run -f .env.development -- atlas schema apply --env neon"
+
+[tasks.db-plan]
+description = "Preview schema diff without applying"
+run = "dotenvx run -f .env.development -- atlas schema apply --env neon --dry-run"

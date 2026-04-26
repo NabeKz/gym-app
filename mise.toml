@@ -1,4 +1,6 @@
 [tools]
+atlas = "latest"
+dotenvx = "latest"
 jq = "latest"
 pnpm = "latest"
 watchexec = "latest"

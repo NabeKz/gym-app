@@ -5,10 +5,13 @@
  * OpenAPI spec version: 1.0.0
  */
 export interface CreateLessonInput {
+  /** @minLength 1 */
   name: string
+  /** @minLength 1 */
   instructor: string
   startsAt: string
   endsAt: string
+  /** @minimum 1 */
   capacity: number
   /** @nullable */
   description?: string | null

@@ -10,7 +10,7 @@ pub type LessonHandler {
 pub fn create(create_lesson: application.CreateLesson) {
   fn(req: Request) {
     use body <- wisp.require_string_body(req)
-    case requests.decode_create_lesson_input(body) {
+    case requests.parse_create_lesson_input(body) {
       Error(_) -> wisp.unprocessable_content()
       Ok(input) ->
         case create_lesson(input) {

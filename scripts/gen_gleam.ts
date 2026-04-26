@@ -12,6 +12,12 @@ type Schema = {
   required?: string[];
   items?: Schema;
   $ref?: string;
+  minLength?: number;
+  maxLength?: number;
+  minimum?: number;
+  maximum?: number;
+  minItems?: number;
+  maxItems?: number;
 };
 
 type PathItem = {
@@ -179,13 +185,131 @@ function generateDecoderBlock(name: string, schema: Schema): string {
     .join(",\n");
 
   const decoderFn =
-    `pub fn decode_${toSnakeCase(name)}(json_string: String) -> Result(${name}, json.DecodeError) {\n` +
+    `fn decode_${toSnakeCase(name)}(json_string: String) -> Result(${name}, json.DecodeError) {\n` +
     `  json.parse(json_string, {\n` +
     fieldLines.join("\n") + "\n" +
     `    decode.success(${name}(\n${constructorArgs},\n    ))\n` +
     `  })\n}`;
 
   return `${typeDef}\n\n${decoderFn}`;
+}
+
+// --- validator ---
+
+type CheckKind = "min_length" | "max_length" | "min_int" | "max_int" | "min_float" | "max_float" | "date_time";
+
+const checkHelpers: Record<CheckKind, string> = {
+  min_length:
+    `fn check_min_length(errors: List(String), field: String, value: String, min: Int) -> List(String) {\n` +
+    `  case string.length(value) >= min {\n` +
+    `    True -> errors\n` +
+    `    False -> [field <> " must be at least " <> int.to_string(min) <> " characters", ..errors]\n` +
+    `  }\n}`,
+  max_length:
+    `fn check_max_length(errors: List(String), field: String, value: String, max: Int) -> List(String) {\n` +
+    `  case string.length(value) <= max {\n` +
+    `    True -> errors\n` +
+    `    False -> [field <> " must be at most " <> int.to_string(max) <> " characters", ..errors]\n` +
+    `  }\n}`,
+  min_int:
+    `fn check_min_int(errors: List(String), field: String, value: Int, min: Int) -> List(String) {\n` +
+    `  case value >= min {\n` +
+    `    True -> errors\n` +
+    `    False -> [field <> " must be at least " <> int.to_string(min), ..errors]\n` +
+    `  }\n}`,
+  max_int:
+    `fn check_max_int(errors: List(String), field: String, value: Int, max: Int) -> List(String) {\n` +
+    `  case value <= max {\n` +
+    `    True -> errors\n` +
+    `    False -> [field <> " must be at most " <> int.to_string(max), ..errors]\n` +
+    `  }\n}`,
+  min_float:
+    `fn check_min_float(errors: List(String), field: String, value: Float, min: Float) -> List(String) {\n` +
+    `  case value >=. min {\n` +
+    `    True -> errors\n` +
+    `    False -> [field <> " must be at least " <> float.to_string(min), ..errors]\n` +
+    `  }\n}`,
+  max_float:
+    `fn check_max_float(errors: List(String), field: String, value: Float, max: Float) -> List(String) {\n` +
+    `  case value <=. max {\n` +
+    `    True -> errors\n` +
+    `    False -> [field <> " must be at most " <> float.to_string(max), ..errors]\n` +
+    `  }\n}`,
+  date_time:
+    `fn check_date_time(errors: List(String), field: String, value: String) -> List(String) {\n` +
+    `  case timestamp.parse_rfc3339(value) {\n` +
+    `    Ok(_) -> errors\n` +
+    `    Error(_) -> [field <> " is not a valid date-time", ..errors]\n` +
+    `  }\n}`,
+};
+
+function collectCheckLines(schema: Schema): { lines: string[]; kinds: Set<CheckKind> } {
+  const required = new Set(schema.required ?? []);
+  const lines: string[] = [];
+  const kinds = new Set<CheckKind>();
+
+  for (const [k, s] of Object.entries(schema.properties ?? {})) {
+    // optional フィールドは今回スキップ
+    if (!required.has(k) || isNullable(s)) continue;
+
+    const snk = toSnakeCase(k);
+    const accessor = `input.${snk}`;
+    const st = scalarType(s);
+
+    if (st === "string" && s.format === "date-time") {
+      lines.push(`    |> check_date_time("${k}", ${accessor})`);
+      kinds.add("date_time");
+    }
+    if (st === "string" && s.minLength !== undefined) {
+      lines.push(`    |> check_min_length("${k}", ${accessor}, ${s.minLength})`);
+      kinds.add("min_length");
+    }
+    if (st === "string" && s.maxLength !== undefined) {
+      lines.push(`    |> check_max_length("${k}", ${accessor}, ${s.maxLength})`);
+      kinds.add("max_length");
+    }
+    if (st === "integer" && s.minimum !== undefined) {
+      lines.push(`    |> check_min_int("${k}", ${accessor}, ${s.minimum})`);
+      kinds.add("min_int");
+    }
+    if (st === "integer" && s.maximum !== undefined) {
+      lines.push(`    |> check_max_int("${k}", ${accessor}, ${s.maximum})`);
+      kinds.add("max_int");
+    }
+    if (st === "number" && s.minimum !== undefined) {
+      lines.push(`    |> check_min_float("${k}", ${accessor}, ${s.minimum}.0)`);
+      kinds.add("min_float");
+    }
+    if (st === "number" && s.maximum !== undefined) {
+      lines.push(`    |> check_max_float("${k}", ${accessor}, ${s.maximum}.0)`);
+      kinds.add("max_float");
+    }
+  }
+
+  return { lines, kinds };
+}
+
+function generateValidatorBlock(name: string, schema: Schema): { block: string; kinds: Set<CheckKind> } | null {
+  const { lines, kinds } = collectCheckLines(schema);
+
+  const validateFn =
+    `fn validate_${toSnakeCase(name)}(input: ${name}) -> Result(${name}, List(String)) {\n` +
+    `  let errors =\n` +
+    `    []\n` +
+    (lines.length > 0 ? lines.join("\n") + "\n" : "") +
+    `  case errors {\n` +
+    `    [] -> Ok(input)\n` +
+    `    _ -> Error(errors)\n` +
+    `  }\n}`;
+
+  const parseFn =
+    `pub fn parse_${toSnakeCase(name)}(json_string: String) -> Result(${name}, List(String)) {\n` +
+    `  case decode_${toSnakeCase(name)}(json_string) {\n` +
+    `    Error(_) -> Error(["invalid request body"])\n` +
+    `    Ok(input) -> validate_${toSnakeCase(name)}(input)\n` +
+    `  }\n}`;
+
+  return { block: `${validateFn}\n\n${parseFn}`, kinds };
 }
 
 // --- helpers ---
@@ -262,13 +386,30 @@ console.log(`Generated ${responseBlocks.length} response schemas → ${responses
 const requestSchemas = objectSchemas.filter(([name]) => requestSchemaNames.has(name));
 
 if (requestSchemas.length > 0) {
-  const requestBlocks = requestSchemas.map(([name, schema]) => generateDecoderBlock(name, schema));
+  const decoderBlocks = requestSchemas.map(([name, schema]) => generateDecoderBlock(name, schema));
+
+  const validatorResults = requestSchemas
+    .map(([name, schema]) => generateValidatorBlock(name, schema))
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  const allKinds = new Set<CheckKind>(validatorResults.flatMap((r) => [...r.kinds]));
+  const validatorBlocks = validatorResults.map((r) => r.block);
+  const helperBlocks = [...allKinds].map((k) => checkHelpers[k]);
 
   const hasOptional = hasOptionalFields(Object.fromEntries(requestSchemas));
+  const needsString = allKinds.has("min_length") || allKinds.has("max_length");
+  const needsInt = allKinds.has("min_length") || allKinds.has("max_length") || allKinds.has("min_int") || allKinds.has("max_int");
+  const needsFloat = allKinds.has("min_float") || allKinds.has("max_float");
+  const needsTimestamp = allKinds.has("date_time");
+
   const requestImports = [
     "import gleam/dynamic/decode",
+    needsFloat ? "import gleam/float" : null,
+    needsInt ? "import gleam/int" : null,
     "import gleam/json",
     hasOptional ? "import gleam/option.{type Option}" : null,
+    needsString ? "import gleam/string" : null,
+    needsTimestamp ? "import gleam/time/timestamp" : null,
   ]
     .filter(Boolean)
     .join("\n");
@@ -280,9 +421,9 @@ if (requestSchemas.length > 0) {
       "// This file is auto-generated from openapi.yaml. Do not edit manually.",
       requestImports,
       "",
-      requestBlocks.join("\n\n"),
+      [...decoderBlocks, ...validatorBlocks, ...helperBlocks].join("\n\n"),
       "",
     ].join("\n")
   );
-  console.log(`Generated ${requestBlocks.length} request schemas → ${requestsPath}`);
+  console.log(`Generated ${decoderBlocks.length} request schemas → ${requestsPath}`);
 }
