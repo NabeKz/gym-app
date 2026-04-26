@@ -1,0 +1,68 @@
+import type { Schema } from "./types.ts";
+import { refName, toSnakeCase, scalarType, isNullable } from "./utils.ts";
+
+function gleamTypeForRequest(schema: Schema, isRequired: boolean): string {
+  let base: string;
+  if (schema.$ref) {
+    base = refName(schema.$ref);
+  } else if (scalarType(schema) === "array") {
+    base = `List(${gleamTypeForRequest(schema.items!, true)})`;
+  } else {
+    const map: Record<string, string> = {
+      string: "String",
+      integer: "Int",
+      number: "Float",
+      boolean: "Bool",
+    };
+    base = map[scalarType(schema)] ?? "Nil";
+  }
+  return isRequired && !isNullable(schema) ? base : `Option(${base})`;
+}
+
+function decoderExpr(schema: Schema): string {
+  if (schema.$ref) return `decode_${toSnakeCase(refName(schema.$ref))}()`;
+  if (scalarType(schema) === "array") {
+    return `decode.list(${decoderExpr(schema.items!)})`;
+  }
+  const map: Record<string, string> = {
+    string: "decode.string",
+    integer: "decode.int",
+    number: "decode.float",
+    boolean: "decode.bool",
+  };
+  return map[scalarType(schema)] ?? "decode.dynamic";
+}
+
+export function generateDecoderBlock(name: string, schema: Schema): string {
+  const required = new Set(schema.required ?? []);
+  const props = Object.entries(schema.properties ?? {});
+
+  const fields = props
+    .map(([k, s]) => `    ${toSnakeCase(k)}: ${gleamTypeForRequest(s, required.has(k))}`)
+    .join(",\n");
+
+  const typeDef = `pub type ${name} {\n  ${name}(\n${fields},\n  )\n}`;
+
+  const fieldLines = props.map(([k, s]) => {
+    const snk = toSnakeCase(k);
+    const inner = decoderExpr(s);
+    if (!required.has(k) || isNullable(s)) {
+      const innerDecoder = isNullable(s) ? `decode.optional(${inner})` : inner;
+      return `    use ${snk} <- decode.optional_field("${k}", option.None, ${innerDecoder})`;
+    }
+    return `    use ${snk} <- decode.field("${k}", ${inner})`;
+  });
+
+  const constructorArgs = props
+    .map(([k]) => `      ${toSnakeCase(k)}:`)
+    .join(",\n");
+
+  const decoderFn =
+    `fn decode_${toSnakeCase(name)}(json_string: String) -> Result(${name}, json.DecodeError) {\n` +
+    `  json.parse(json_string, {\n` +
+    fieldLines.join("\n") + "\n" +
+    `    decode.success(${name}(\n${constructorArgs},\n    ))\n` +
+    `  })\n}`;
+
+  return `${typeDef}\n\n${decoderFn}`;
+}

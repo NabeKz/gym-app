@@ -3,11 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "js-yaml": "^4.1.0"
+  "scripts": {
+    "gen": "redocly bundle ../docs/openapi.yaml --ext json -o /tmp/gym_app_openapi.json && bun gen_gleam.ts /tmp/gym_app_openapi.json"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.0.0"
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@redocly/cli": "latest"
   }
 }

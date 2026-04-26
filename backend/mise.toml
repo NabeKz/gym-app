@@ -6,6 +6,11 @@ gleam = "latest"
 rebar = "latest"
 watchexec = "latest"
 
+[tasks.gen]
+description = "Generate Gleam types from openapi.yaml"
+dir = "../scripts"
+run = "bun run gen"
+
 [tasks.dev]
 description = "dev"
 run = """

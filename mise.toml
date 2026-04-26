@@ -5,6 +5,7 @@ jq = "latest"
 pnpm = "latest"
 watchexec = "latest"
 node = "latest"
+bun = "latest"
 
 [tasks.dev-backend]
 description = "dev-backend"
@@ -20,9 +21,9 @@ run = """
   mise run dev
 """
 
-[tasks.gen]
+[tasks.codegen]
 description = "Generate code from openapi.yaml"
 run = """
-  node scripts/gen_gleam.ts
-  cd frontend && pnpm gen
+  mise -C backend run gen
+  mise -C frontend run gen
 """
