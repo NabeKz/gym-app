@@ -3,4 +3,9 @@ import features/lessons/application/command
 pub type CreateLesson =
   command.Create
 
-pub const create = command.create
+pub type CreateAdaptor =
+  command.CreateAdaptor
+
+pub fn create(adaptor: CreateAdaptor) -> CreateLesson {
+  command.create(adaptor)
+}

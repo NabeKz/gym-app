@@ -1,8 +1,8 @@
-import app/handlers/lessons
 import gleam/http
-import wisp.{type Connection, type Request, type Response}
+import wisp.{type Request, type Response}
 
 import app/handlers
+import app/handlers/lessons
 import app/middleware.{middleware}
 
 pub fn handle_request(handlers: handlers.Handlers) {
