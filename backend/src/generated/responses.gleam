@@ -13,7 +13,7 @@ pub type Lesson {
     ends_at: Timestamp,
     capacity: Int,
     remaining_slots: Int,
-    description: Option(String),
+    description: String,
   )
 }
 
@@ -26,7 +26,7 @@ pub fn encode_lesson(value: Lesson) -> json.Json {
     #("endsAt", json.string(timestamp.to_rfc3339(value.ends_at, calendar.utc_offset))),
     #("capacity", json.int(value.capacity)),
     #("remainingSlots", json.int(value.remaining_slots)),
-    #("description", json.nullable(value.description, json.string)),
+    #("description", json.string(value.description)),
   ])
 }
 

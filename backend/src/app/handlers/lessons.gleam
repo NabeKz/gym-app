@@ -1,9 +1,7 @@
 import generated/requests
-import pog
 import wisp.{type Request, type Response}
 
 import app/handlers/error_responses
-import features/lessons/adaptor/rbd
 import features/lessons/application
 
 pub type LessonHandler {
@@ -27,7 +25,6 @@ pub fn create(
   }
 }
 
-pub fn new(db: pog.Connection) {
-  let create_lesson = application.create(rbd.create(db))
+pub fn new(create_lesson: application.CreateLesson) {
   LessonHandler(create: create(create_lesson, _))
 }

@@ -52,6 +52,7 @@ components:
         - startsAt
         - endsAt
         - capacity
+        - description
       properties:
         name:
           type: string
@@ -69,7 +70,7 @@ components:
           type: integer
           minimum: 1
         description:
-          type: ["string", "null"]
+          type: string
 
     Lesson:
       type: object
@@ -81,6 +82,7 @@ components:
         - endsAt
         - capacity
         - remainingSlots
+        - description
       properties:
         id:
           type: string
@@ -100,7 +102,7 @@ components:
         remainingSlots:
           type: integer
         description:
-          type: ["string", "null"]
+          type: string
 
     Exercise:
       type: object

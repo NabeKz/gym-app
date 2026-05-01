@@ -4,3 +4,9 @@ env "neon" {
   dev     = getenv("DEV_DATABASE_URL")
   schemas = ["public", "app"]
 }
+
+env "local" {
+  src     = "file://db/schema.hcl"
+  url     = "postgresql://postgres:dev@localhost:5432/gym_app?sslmode=disable"
+  schemas = ["public", "app"]
+}

@@ -2,7 +2,6 @@
 import gleam/dynamic/decode
 import gleam/int
 import gleam/json
-import gleam/option.{type Option}
 import gleam/string
 import gleam/time/timestamp
 
@@ -13,7 +12,7 @@ pub type CreateLessonInput {
     starts_at: String,
     ends_at: String,
     capacity: Int,
-    description: Option(String),
+    description: String,
   )
 }
 
@@ -24,7 +23,7 @@ fn decode_create_lesson_input(json_string: String) -> Result(CreateLessonInput, 
     use starts_at <- decode.field("startsAt", decode.string)
     use ends_at <- decode.field("endsAt", decode.string)
     use capacity <- decode.field("capacity", decode.int)
-    use description <- decode.optional_field("description", option.None, decode.optional(decode.string))
+    use description <- decode.field("description", decode.string)
     decode.success(CreateLessonInput(
       name:,
       instructor:,

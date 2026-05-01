@@ -18,11 +18,11 @@ table "lessons" {
     null = false
   }
   column "starts_at" {
-    type = timestamptz
+    type = timestamp
     null = false
   }
   column "ends_at" {
-    type = timestamptz
+    type = timestamp
     null = false
   }
   column "capacity" {
@@ -35,7 +35,7 @@ table "lessons" {
   }
   column "description" {
     type = text
-    null = true
+    null = false
   }
 
   primary_key {

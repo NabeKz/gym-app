@@ -13,8 +13,7 @@ export interface CreateLessonInput {
   endsAt: string
   /** @minimum 1 */
   capacity: number
-  /** @nullable */
-  description?: string | null
+  description: string
 }
 
 export interface Lesson {
@@ -25,8 +24,7 @@ export interface Lesson {
   endsAt: string
   capacity: number
   remainingSlots: number
-  /** @nullable */
-  description?: string | null
+  description: string
 }
 
 export interface Exercise {

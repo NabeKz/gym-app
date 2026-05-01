@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ジムアプリのモノレポ。バックエンドは **Gleam (Erlang/OTP)** + **Wisp** フレームワーク、フロントエンドは **React 19** + **TanStack Router** + **Panda CSS** で構成される。
 
+設計方針の詳細は `.claude/rules/` を参照。
+
 ## 開発コマンド
 
 ### バックエンド (`backend/`)
@@ -13,13 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```sh
 # 開発サーバー起動（ファイル変更を watch して自動再起動）
 mise run dev-backend   # ルートから
-# または
 cd backend && mise run dev
 
 # テスト実行
 cd backend && gleam test
 
-# ビルド
+# ビルド確認
 cd backend && gleam build
 ```
 
@@ -28,76 +29,93 @@ cd backend && gleam build
 ### フロントエンド (`frontend/`)
 
 ```sh
-# 開発サーバー起動
-mise run dev-frontend   # ルートから
-# または
-cd frontend && pnpm dev
-
-# ビルド
-cd frontend && pnpm build
-
-# フォーマット（oxfmt）
-cd frontend && pnpm format
-
-# Lint（oxlint）
-cd frontend && pnpm lint
+cd frontend && pnpm dev    # 開発サーバー
+cd frontend && pnpm build  # ビルド
+cd frontend && pnpm format # フォーマット（oxfmt）
+cd frontend && pnpm lint   # Lint（oxlint）
 ```
 
-### コード生成（OpenAPI）
+### コード生成
 
 ```sh
-# ルートから実行（バックエンドとフロントエンド両方を生成）
-mise run gen
+# OpenAPI + SQL 両方を生成（ルートから）
+mise run codegen
+
+# SQL のみ生成（要: ローカル DB 起動済み）
+cd backend && mise run gen-sql
 ```
 
-これは `docs/openapi.yaml` を元に以下を生成する:
-- `backend/src/generated/responses.gleam` — Gleam の型定義と JSON エンコーダー（`scripts/gen_gleam.ts` が生成）
-- `frontend/src/shared/generated/openapi.gen.ts` — TypeScript の fetch クライアント（orval が生成）
+生成されるファイル（手動編集禁止）:
+- `backend/src/generated/` — OpenAPI から生成した Gleam 型・バリデーション・エンコーダー
+- `frontend/src/shared/generated/` — OpenAPI から生成した TypeScript fetch クライアント
+- `backend/src/features/**/sql.gleam` — SQL ファイルから squirrel が生成した型安全クエリ関数
 
-**`backend/src/generated/` と `frontend/src/shared/generated/` は手動編集禁止。**
+スキーマ変更は `docs/openapi.yaml` → `mise run codegen`、DB スキーマ変更は `backend/db/schema.hcl` → `mise run db-apply` の順で行う。
+
+### ローカル DB（SQL コード生成用）
+
+squirrel は SSL 非対応のため、`gen-sql` はローカルの Docker DB を使う。
+
+```sh
+cd backend && mise run db-local-up       # Docker で PostgreSQL 起動
+cd backend && mise run db-local-migrate  # スキーマ適用（Atlas）
+cd backend && mise run gen-sql           # SQL → Gleam コード生成
+```
+
+本番・開発 DB（Neon）への適用は `cd backend && mise run db-apply`。
 
 ## アーキテクチャ
 
 ### API 定義ファースト
 
-`docs/openapi.yaml` が唯一の信頼できるソース。スキーマ変更は必ずここを先に修正し、`mise run gen` でコードを再生成する。
+`docs/openapi.yaml` が唯一の信頼できるソース。リクエスト/レスポンスの型・バリデーション・エンコーディングはすべてここから生成される。
 
-### バックエンド構造
+### バックエンドのレイヤー構成
+
+依存の方向は一方向: `app/` → `features/` → `adaptor/`
 
 ```
 backend/src/
-├── backend.gleam              # エントリーポイント（Wisp + Mist でサーバー起動）
+├── backend.gleam         # エントリーポイント。DB接続・ハンドラー初期化・サーバー起動
 ├── app/
-│   ├── router.gleam           # ルーティング（path_segments でパターンマッチ）
-│   └── middleware.gleam       # 共通ミドルウェア（ログ、CSRF 保護等）
+│   ├── router.gleam      # path_segments でパターンマッチするルーティング
+│   ├── middleware.gleam  # ログ・CSRF 保護等
+│   ├── handlers.gleam    # Handlers 構造体（全フィーチャーのハンドラーをまとめる）
+│   ├── handlers/         # フィーチャー別 HTTP ハンドラー
+│   └── db.gleam          # DB 接続（DATABASE_URL 環境変数）
 ├── features/
-│   └── lessons/
-│       └── application/
-│           ├── query.gleam    # 読み取り系ユースケース
-│           └── command.gleam  # 書き込み系ユースケース
-└── generated/
-    └── responses.gleam        # 自動生成（編集禁止）
+│   └── <feature>/
+│       ├── application.gleam     # 公開 API（再エクスポート）
+│       ├── application/
+│       │   ├── command.gleam     # 書き込み系ユースケース（CQRS）
+│       │   └── query.gleam       # 読み取り系ユースケース（CQRS）
+│       ├── adaptor/
+│       │   └── rdb.gleam         # DB 実装。squirrel 生成関数を呼ぶ
+│       └── sql/                  # squirrel 用 SQL ファイル（1ファイル1クエリ）
+├── generated/            # 自動生成（編集禁止）
+└── shared/               # 共通ユーティリティ（date, env）
 ```
 
-機能ごとに `features/<feature>/application/` 以下に query / command を分けて実装する。
+### 依存性注入パターン
+
+アダプターを関数型で注入する。`command.gleam` はアダプター関数を受け取って `Create` 関数を返す。ハンドラーの `new(db)` でアダプターを束縛して `LessonHandler` を組み立てる。
+
+```gleam
+pub type CreateAdaptor = fn(Lesson) -> Result(Lesson, String)
+pub fn create(adaptor: CreateAdaptor) -> Create { ... }
+```
+
+### DB クエリ
+
+SQL ファイル（`features/**/sql/*.sql`）を squirrel で解析してコード生成。型安全性はコード生成時（ローカル DB への接続）に検証される。
 
 ### フロントエンド構造
 
 ```
 frontend/src/
-├── main.tsx                   # エントリーポイント
-├── app/routes/                # TanStack Router のファイルベースルーティング
-│   ├── __root.tsx             # ルートレイアウト
-│   └── index.tsx              # / ルート
-├── pages/                     # ページコンポーネント（ルートから呼ばれる）
-│   └── lessons/
-│       └── index.tsx
-└── shared/generated/          # 自動生成（編集禁止）
-    └── openapi.gen.ts
+├── app/routes/    # TanStack Router のファイルベースルーティング
+├── pages/         # ページコンポーネント（ルートから呼ばれる）
+└── shared/generated/  # 自動生成（編集禁止）
 ```
 
-スタイリングは **Panda CSS** を使用。`styled-system/` ディレクトリ内のクラスを `panda codegen` で生成する（`pnpm build` に含まれる）。TanStack Router のルートツリーは `src/routeTree.gen.ts` に自動生成される。
-
-### DB
-
-バックエンドの依存に `pog`（PostgreSQL クライアント）が含まれる。DB 接続の設定は実装中。
+スタイリングは Panda CSS。`routeTree.gen.ts` と `styled-system/` は自動生成。
