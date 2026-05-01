@@ -11,6 +11,10 @@ description = "Generate Gleam types from openapi.yaml"
 dir = "../scripts"
 run = "bun run gen"
 
+[tasks.gen-sql]
+description = "Generate type-safe Gleam functions from SQL files"
+run = "dotenvx run -f .env.development -- gleam run -m squirrel"
+
 [tasks.dev]
 description = "dev"
 run = """

@@ -22,8 +22,9 @@ run = """
 """
 
 [tasks.codegen]
-description = "Generate code from openapi.yaml"
+description = "Generate code from openapi.yaml and SQL files"
 run = """
   mise -C backend run gen
   mise -C frontend run gen
+  mise -C backend run gen-sql
 """
