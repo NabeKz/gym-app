@@ -22,18 +22,22 @@ pub fn start() -> pog.Connection {
 // doesn't support SNI. Extracts the endpoint ID from the host (e.g.
 // "ep-cold-heart-abc123-pooler.region.aws.neon.tech" → "ep-cold-heart-abc123").
 fn with_neon_endpoint(config: pog.Config) -> pog.Config {
-  case string.split(config.host, ".") {
-    [first_segment, ..] -> {
-      let endpoint_id = case string.split(first_segment, "-pooler") {
-        [id, ..] -> id
-        _ -> first_segment
+  case string.contains(config.host, "neon.tech") {
+    False -> config
+    True ->
+      case string.split(config.host, ".") {
+        [first_segment, ..] -> {
+          let endpoint_id = case string.split(first_segment, "-pooler") {
+            [id, ..] -> id
+            _ -> first_segment
+          }
+          pog.connection_parameter(
+            config,
+            name: "options",
+            value: "endpoint=" <> endpoint_id,
+          )
+        }
+        _ -> config
       }
-      pog.connection_parameter(
-        config,
-        name: "options",
-        value: "endpoint=" <> endpoint_id,
-      )
-    }
-    _ -> config
   }
 }

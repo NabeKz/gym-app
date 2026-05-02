@@ -1,6 +1,8 @@
 import gleam/list
 import gleam/result
+import gleam/string
 import pog
+import wisp
 import youid/uuid
 
 import features/lessons/application/command
@@ -22,7 +24,10 @@ fn do_create(db: pog.Connection, lesson: Lesson) -> Result(Lesson, String) {
     lesson.description,
   )
   |> result.map(fn(_) { lesson })
-  |> result.map_error(fn(_) { "Failed to save lesson" })
+  |> result.map_error(fn(err) {
+    wisp.log_error(string.inspect(err))
+    "Failed to save lesson"
+  })
 }
 
 pub fn create(db: pog.Connection) -> command.CreateAdaptor {
@@ -46,7 +51,10 @@ fn do_list(db: pog.Connection, _input: Nil) -> Result(List(Lesson), String) {
       )
     })
   })
-  |> result.map_error(fn(_) { "Failed to list lesson" })
+  |> result.map_error(fn(err) {
+    wisp.log_error(string.inspect(err))
+    "Failed to list lesson"
+  })
 }
 
 pub fn list(db: pog.Connection) -> query.ListAdaptor {

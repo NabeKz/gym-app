@@ -27,6 +27,7 @@ pub fn handle_request(handlers: handlers.Handlers) {
 
 pub fn lessons(req: wisp.Request, h: lessons.LessonHandler) {
   case req.method {
+    http.Get -> req |> h.list()
     http.Post -> req |> h.create()
     _ -> wisp.not_found()
   }

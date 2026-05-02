@@ -27,13 +27,13 @@ run = "DATABASE_URL='postgresql://postgres:dev@localhost:5432/gym_app' gleam run
 [tasks.dev]
 description = "dev"
 run = """
-  dotenvx run -f .env.development -- watchexec -w src -r --stop-timeout 0 -- gleam run
+  DATABASE_URL='postgresql://postgres:dev@localhost:5432/gym_app' watchexec -w src -r --stop-timeout 0 --stop-signal SIGKILL -- gleam run
 """
 
 [tasks.db-apply]
 description = "Apply schema to database (declarative migration)"
-run = "dotenvx run -f .env.development -- atlas schema apply --env neon"
+run = "atlas schema apply --env local --auto-approve"
 
 [tasks.db-plan]
 description = "Preview schema diff without applying"
-run = "dotenvx run -f .env.development -- atlas schema apply --env neon --dry-run"
+run = "atlas schema apply --env local --dry-run"

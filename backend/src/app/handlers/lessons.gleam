@@ -19,7 +19,11 @@ fn create(create_lesson: application.CreateLesson, req: Request) -> Response {
   )
 
   case create_lesson(input) {
-    Ok(_) -> wisp.ok()
+    Ok(lesson) ->
+      lesson
+      |> responses.encode_lesson
+      |> json.to_string
+      |> wisp.json_response(201)
     Error(err) -> wisp.bad_request(err)
   }
 }

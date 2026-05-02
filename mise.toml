@@ -28,3 +28,10 @@ run = """
   mise -C frontend run gen
   mise -C backend run gen-sql
 """
+
+[tasks.db-connect]
+description = "db connect"
+run = """
+  docker compose exec -e PGOPTIONS="-c search_path=app" db psql -U postgres -d gym_app
+"""
+
