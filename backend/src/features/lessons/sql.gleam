@@ -86,6 +86,62 @@ RETURNING
   |> pog.execute(db)
 }
 
+/// A row you get from running the `list_lesson` query
+/// defined in `./src/features/lessons/sql/list_lesson.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type ListLessonRow {
+  ListLessonRow(
+    id: Uuid,
+    name: String,
+    instructor: String,
+    starts_at: Timestamp,
+    ends_at: Timestamp,
+    capacity: Int,
+    remaining_slots: Int,
+    description: String,
+  )
+}
+
+/// Runs the `list_lesson` query
+/// defined in `./src/features/lessons/sql/list_lesson.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn list_lesson(
+  db: pog.Connection,
+) -> Result(pog.Returned(ListLessonRow), pog.QueryError) {
+  let decoder = {
+    use id <- decode.field(0, uuid_decoder())
+    use name <- decode.field(1, decode.string)
+    use instructor <- decode.field(2, decode.string)
+    use starts_at <- decode.field(3, pog.timestamp_decoder())
+    use ends_at <- decode.field(4, pog.timestamp_decoder())
+    use capacity <- decode.field(5, decode.int)
+    use remaining_slots <- decode.field(6, decode.int)
+    use description <- decode.field(7, decode.string)
+    decode.success(ListLessonRow(
+      id:,
+      name:,
+      instructor:,
+      starts_at:,
+      ends_at:,
+      capacity:,
+      remaining_slots:,
+      description:,
+    ))
+  }
+
+  "SELECT id, name, instructor, starts_at, ends_at, capacity, remaining_slots, description FROM app.lessons
+"
+  |> pog.query
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
 // --- Encoding/decoding utils -------------------------------------------------
 
 /// A decoder to decode `Uuid`s coming from a Postgres query.

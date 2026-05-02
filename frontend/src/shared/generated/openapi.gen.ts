@@ -87,7 +87,9 @@ export const getGetLessonsUrl = (params?: GetLessonsParams) => {
 
   const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/lessons?${stringifiedParams}` : `/lessons`
+  return stringifiedParams.length > 0
+    ? `http://localhost:8000/lessons?${stringifiedParams}`
+    : `http://localhost:8000/lessons`
 }
 
 export const getLessons = async (
@@ -120,7 +122,7 @@ export type createLessonResponseSuccess = createLessonResponse200 & {
 export type createLessonResponse = createLessonResponseSuccess
 
 export const getCreateLessonUrl = () => {
-  return `/lessons`
+  return `http://localhost:8000/lessons`
 }
 
 export const createLesson = async (

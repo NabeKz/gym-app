@@ -2,22 +2,22 @@ import gleam/time/timestamp
 import youid/uuid
 
 import generated/requests
-import generated/responses
+import generated/responses.{type Lesson, Lesson}
 
 pub type CreateAdaptor =
-  fn(responses.Lesson) -> Result(responses.Lesson, String)
+  fn(Lesson) -> Result(Lesson, String)
 
 pub type Create =
-  fn(requests.CreateLessonInput) -> Result(responses.Lesson, String)
+  fn(requests.CreateLessonInput) -> Result(Lesson, String)
 
 fn do_create(
   adaptor: CreateAdaptor,
   input: requests.CreateLessonInput,
-) -> Result(responses.Lesson, String) {
+) -> Result(Lesson, String) {
   let id = uuid.v4() |> uuid.to_string()
   let assert Ok(starts_at) = timestamp.parse_rfc3339(input.starts_at)
   let assert Ok(ends_at) = timestamp.parse_rfc3339(input.ends_at)
-  responses.Lesson(
+  Lesson(
     id:,
     name: input.name,
     instructor: input.instructor,

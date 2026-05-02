@@ -14,14 +14,15 @@ pub fn main() {
   wisp.configure_logger()
 
   let conn = db.start()
-  let h =
-    handlers.Handlers(
-      lessons: conn |> rdb.create |> application.create |> lessons.new,
-    )
+  let handler =
+    handlers.Handlers(lessons: lessons.new(
+      conn |> rdb.create |> application.create,
+      conn |> rdb.list |> application.list,
+    ))
 
   let secret_key_base = wisp.random_string(64)
   let assert Ok(_) =
-    h
+    handler
     |> router.handle_request()
     |> wisp_mist.handler(secret_key_base)
     |> mist.new()
