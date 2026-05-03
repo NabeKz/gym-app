@@ -17,6 +17,7 @@ pub fn main() {
   let handler =
     handlers.Handlers(lessons: lessons.new(
       conn |> rdb.create |> application.create,
+      conn |> rdb.read |> application.read,
       conn |> rdb.list |> application.list,
     ))
 

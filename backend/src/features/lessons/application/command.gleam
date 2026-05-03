@@ -14,7 +14,7 @@ fn do_create(
   adaptor: CreateAdaptor,
   input: requests.CreateLessonInput,
 ) -> Result(Lesson, String) {
-  let id = uuid.v4() |> uuid.to_string()
+  let id = uuid.v4()
   let assert Ok(starts_at) = timestamp.parse_rfc3339(input.starts_at)
   let assert Ok(ends_at) = timestamp.parse_rfc3339(input.ends_at)
   Lesson(

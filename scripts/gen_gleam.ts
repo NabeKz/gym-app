@@ -2,10 +2,11 @@ import type { Spec } from "./gleam/types.ts";
 import {
   hasOptionalFields,
   hasDateTimeFields,
+  hasUuidFields,
   collectRequestSchemaNames,
 } from "./gleam/utils.ts";
 import { generateEncoderBlock } from "./gleam/encoder.ts";
-import { generateDecoderBlock } from "./gleam/decoder.ts";
+import { generateDecoderBlock, uuidDecodeHelper } from "./gleam/decoder.ts";
 import { checkHelpers, generateValidatorBlock } from "./gleam/validator.ts";
 import type { CheckKind } from "./gleam/validator.ts";
 
@@ -23,11 +24,13 @@ const requestSchemaNames = collectRequestSchemaNames(spec);
 const responseSchemas = objectSchemas.filter(([name]) => !requestSchemaNames.has(name));
 const responseBlocks = responseSchemas.map(([name, schema]) => generateEncoderBlock(name, schema));
 
+const responseSchemaMap = Object.fromEntries(responseSchemas);
 const responseImports = [
   "import gleam/json",
-  hasOptionalFields(Object.fromEntries(responseSchemas)) ? "import gleam/option.{type Option}" : null,
-  hasDateTimeFields(Object.fromEntries(responseSchemas)) ? "import gleam/time/calendar" : null,
-  hasDateTimeFields(Object.fromEntries(responseSchemas)) ? "import gleam/time/timestamp.{type Timestamp}" : null,
+  hasOptionalFields(responseSchemaMap) ? "import gleam/option.{type Option}" : null,
+  hasDateTimeFields(responseSchemaMap) ? "import gleam/time/calendar" : null,
+  hasDateTimeFields(responseSchemaMap) ? "import gleam/time/timestamp.{type Timestamp}" : null,
+  hasUuidFields(responseSchemaMap) ? "import youid/uuid.{type Uuid}" : null,
 ]
   .filter(Boolean)
   .join("\n");
@@ -59,7 +62,8 @@ if (requestSchemas.length > 0) {
   const validatorBlocks = validatorResults.map((r) => r.block);
   const helperBlocks = [...allKinds].map((k) => checkHelpers[k]);
 
-  const hasOptional = hasOptionalFields(Object.fromEntries(requestSchemas));
+  const requestSchemaMap = Object.fromEntries(requestSchemas);
+  const hasOptional = hasOptionalFields(requestSchemaMap);
   const needsString = allKinds.has("min_length") || allKinds.has("max_length");
   const needsInt =
     allKinds.has("min_length") ||
@@ -68,6 +72,7 @@ if (requestSchemas.length > 0) {
     allKinds.has("max_int");
   const needsFloat = allKinds.has("min_float") || allKinds.has("max_float");
   const needsTimestamp = allKinds.has("date_time");
+  const needsUuid = hasUuidFields(requestSchemaMap);
 
   const requestImports = [
     "import gleam/dynamic/decode",
@@ -77,6 +82,7 @@ if (requestSchemas.length > 0) {
     hasOptional ? "import gleam/option.{type Option}" : null,
     needsString ? "import gleam/string" : null,
     needsTimestamp ? "import gleam/time/timestamp" : null,
+    needsUuid ? "import youid/uuid.{type Uuid}" : null,
   ]
     .filter(Boolean)
     .join("\n");
@@ -88,7 +94,7 @@ if (requestSchemas.length > 0) {
       "// This file is auto-generated from openapi.yaml. Do not edit manually.",
       requestImports,
       "",
-      [...decoderBlocks, ...validatorBlocks, ...helperBlocks].join("\n\n"),
+      [...decoderBlocks, ...validatorBlocks, ...helperBlocks, ...(needsUuid ? [uuidDecodeHelper] : [])].join("\n\n"),
       "",
     ].join("\n")
   );

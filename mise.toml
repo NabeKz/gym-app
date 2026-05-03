@@ -7,6 +7,10 @@ watchexec = "latest"
 node = "latest"
 bun = "latest"
 
+[tasks.dev-all]
+description = "dev-all"
+depends = ["dev-backend", "dev-frontend"]
+
 [tasks.dev-backend]
 description = "dev-backend"
 dir = "backend"

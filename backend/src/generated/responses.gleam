@@ -3,10 +3,11 @@ import gleam/json
 import gleam/option.{type Option}
 import gleam/time/calendar
 import gleam/time/timestamp.{type Timestamp}
+import youid/uuid.{type Uuid}
 
 pub type Lesson {
   Lesson(
-    id: String,
+    id: Uuid,
     name: String,
     instructor: String,
     starts_at: Timestamp,
@@ -19,7 +20,7 @@ pub type Lesson {
 
 pub fn encode_lesson(value: Lesson) -> json.Json {
   json.object([
-    #("id", json.string(value.id)),
+    #("id", json.string(uuid.to_string(value.id))),
     #("name", json.string(value.name)),
     #("instructor", json.string(value.instructor)),
     #("startsAt", json.string(timestamp.to_rfc3339(value.starts_at, calendar.utc_offset))),

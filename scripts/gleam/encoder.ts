@@ -9,7 +9,7 @@ export function gleamType(schema: Schema, isRequired: boolean): string {
     base = `List(${gleamType(schema.items!, true)})`;
   } else {
     const map: Record<string, string> = {
-      string: schema.format === "date-time" ? "Timestamp" : "String",
+      string: schema.format === "date-time" ? "Timestamp" : schema.format === "uuid" ? "Uuid" : "String",
       integer: "Int",
       number: "Float",
       boolean: "Bool",
@@ -29,6 +29,9 @@ function encodeExpr(schema: Schema, accessor: string, isRequired: boolean): stri
     if (scalarType(s) === "string" && s.format === "date-time") {
       return `json.string(timestamp.to_rfc3339(${acc}, calendar.utc_offset))`;
     }
+    if (scalarType(s) === "string" && s.format === "uuid") {
+      return `json.string(uuid.to_string(${acc}))`;
+    }
     const map: Record<string, string> = {
       string: `json.string(${acc})`,
       integer: `json.int(${acc})`,
@@ -40,7 +43,7 @@ function encodeExpr(schema: Schema, accessor: string, isRequired: boolean): stri
 
   if (!isRequired || isNullable(schema)) {
     const shorthand: Record<string, string> = {
-      ...(schema.format !== "date-time" ? { string: "json.string" } : {}),
+      ...(schema.format !== "date-time" && schema.format !== "uuid" ? { string: "json.string" } : {}),
       integer: "json.int",
       number: "json.float",
       boolean: "json.bool",

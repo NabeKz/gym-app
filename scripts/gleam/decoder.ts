@@ -9,7 +9,7 @@ function gleamTypeForRequest(schema: Schema, isRequired: boolean): string {
     base = `List(${gleamTypeForRequest(schema.items!, true)})`;
   } else {
     const map: Record<string, string> = {
-      string: "String",
+      string: schema.format === "uuid" ? "Uuid" : "String",
       integer: "Int",
       number: "Float",
       boolean: "Bool",
@@ -24,6 +24,9 @@ function decoderExpr(schema: Schema): string {
   if (scalarType(schema) === "array") {
     return `decode.list(${decoderExpr(schema.items!)})`;
   }
+  if (scalarType(schema) === "string" && schema.format === "uuid") {
+    return `decode_uuid_field()`;
+  }
   const map: Record<string, string> = {
     string: "decode.string",
     integer: "decode.int",
@@ -32,6 +35,15 @@ function decoderExpr(schema: Schema): string {
   };
   return map[scalarType(schema)] ?? "decode.dynamic";
 }
+
+export const uuidDecodeHelper =
+  `fn decode_uuid_field() -> decode.Decoder(uuid.Uuid) {\n` +
+  `  use s <- decode.then(decode.string)\n` +
+  `  case uuid.from_string(s) {\n` +
+  `    Ok(u) -> decode.success(u)\n` +
+  `    Error(_) -> decode.failure(uuid.nil, "UUID")\n` +
+  `  }\n` +
+  `}`;
 
 export function generateDecoderBlock(name: string, schema: Schema): string {
   const required = new Set(schema.required ?? []);

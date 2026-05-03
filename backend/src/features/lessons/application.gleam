@@ -4,6 +4,9 @@ import features/lessons/application/query
 pub type CreateLesson =
   command.Create
 
+pub type ReadLesson =
+  query.ReadLesson
+
 pub type ListLesson =
   query.LessonList
 
@@ -13,10 +16,11 @@ pub type CreateAdaptor =
 pub type ListAdaptor =
   query.ListAdaptor
 
-pub fn create(adaptor: CreateAdaptor) -> CreateLesson {
-  command.create(adaptor)
-}
+pub type ReadAdaptor =
+  query.ReadAdaptor
 
-pub fn list(adaptor: ListAdaptor) -> ListLesson {
-  fn() { query.list(adaptor) }
-}
+pub const create = command.create
+
+pub const read = query.read
+
+pub const list = query.list

@@ -2,12 +2,17 @@ import generated/requests
 import generated/responses
 import gleam/json
 import wisp.{type Request, type Response}
+import youid/uuid
 
 import app/handlers/error_responses
 import features/lessons/application
 
 pub type LessonHandler {
-  LessonHandler(create: fn(Request) -> Response, list: fn(Request) -> Response)
+  LessonHandler(
+    create: fn(Request) -> Response,
+    read: fn(String) -> Response,
+    list: fn(Request) -> Response,
+  )
 }
 
 fn create(create_lesson: application.CreateLesson, req: Request) -> Response {
@@ -28,8 +33,23 @@ fn create(create_lesson: application.CreateLesson, req: Request) -> Response {
   }
 }
 
+fn read(read_lesson: application.ReadLesson, id: String) -> Response {
+  case uuid.from_string(id) {
+    Error(_) -> wisp.bad_request("Invalid ID")
+    Ok(lesson_uuid) ->
+      case read_lesson(lesson_uuid) {
+        Ok(lesson) ->
+          lesson
+          |> responses.encode_lesson
+          |> json.to_string
+          |> wisp.json_response(200)
+        Error(_) -> wisp.not_found()
+      }
+  }
+}
+
 fn list(list_lesson: application.ListLesson, _req: Request) -> Response {
-  case list_lesson() {
+  case list_lesson(Nil) {
     Ok(rows) -> {
       rows
       |> json.array(responses.encode_lesson)
@@ -42,7 +62,12 @@ fn list(list_lesson: application.ListLesson, _req: Request) -> Response {
 
 pub fn new(
   create_lesson: application.CreateLesson,
+  read_lesson: application.ReadLesson,
   list_lesson: application.ListLesson,
-) {
-  LessonHandler(create: create(create_lesson, _), list: list(list_lesson, _))
+) -> LessonHandler {
+  LessonHandler(
+    create: create(create_lesson, _),
+    read: read(read_lesson, _),
+    list: list(list_lesson, _),
+  )
 }

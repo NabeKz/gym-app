@@ -26,9 +26,11 @@ pub fn handle_request(handlers: handlers.Handlers) {
 }
 
 pub fn lessons(req: wisp.Request, h: lessons.LessonHandler) {
-  case req.method {
-    http.Get -> req |> h.list()
-    http.Post -> req |> h.create()
-    _ -> wisp.not_found()
+  let path = wisp.path_segments(req)
+  case path, req.method {
+    ["lessons"], http.Get -> req |> h.list()
+    ["lessons"], http.Post -> req |> h.create()
+    ["lessons", id], http.Get -> h.read(id)
+    _, _ -> wisp.not_found()
   }
 }

@@ -31,6 +31,14 @@ export function hasDateTimeFields(schemas: Record<string, Schema>): boolean {
   );
 }
 
+export function hasUuidFields(schemas: Record<string, Schema>): boolean {
+  return Object.values(schemas).some((schema) =>
+    Object.values(schema.properties ?? {}).some(
+      (s) => scalarType(s) === "string" && s.format === "uuid"
+    )
+  );
+}
+
 export function collectRequestSchemaNames(spec: Spec): Set<string> {
   const names = new Set<string>();
   for (const pathItem of Object.values(spec.paths ?? {})) {
