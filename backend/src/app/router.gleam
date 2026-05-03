@@ -16,7 +16,7 @@ pub fn handle_request(handlers: handlers.Handlers) {
         wisp.ok()
       }
 
-      ["lessons", _] -> req |> lessons(handlers.lessons)
+      ["lessons", ..] -> req |> lessons(handlers.lessons)
 
       _ -> {
         wisp.log_warning("User requested a route that does not exist")
@@ -28,10 +28,11 @@ pub fn handle_request(handlers: handlers.Handlers) {
 
 pub fn lessons(req: wisp.Request, h: lessons.LessonHandler) {
   let path = wisp.path_segments(req) |> list.drop(1)
+
   case path, req.method {
     [], http.Get -> req |> h.list()
     [], http.Post -> req |> h.create()
-    [id], _ -> h.read(id)
+    [id], http.Get -> id |> h.read()
     _, _ -> wisp.not_found()
   }
 }

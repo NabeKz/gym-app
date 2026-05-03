@@ -15,6 +15,7 @@ depends = ["dev-backend", "dev-frontend"]
 description = "dev-backend"
 dir = "backend"
 run = """
+  docker compose -f ../compose.yml up -d
   mise run dev
 """
 
