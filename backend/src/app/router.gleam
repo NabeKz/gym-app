@@ -1,4 +1,5 @@
 import gleam/http
+import gleam/list
 import wisp.{type Request, type Response}
 
 import app/handlers
@@ -15,7 +16,7 @@ pub fn handle_request(handlers: handlers.Handlers) {
         wisp.ok()
       }
 
-      ["lessons"] -> req |> lessons(handlers.lessons)
+      ["lessons", _] -> req |> lessons(handlers.lessons)
 
       _ -> {
         wisp.log_warning("User requested a route that does not exist")
@@ -26,11 +27,11 @@ pub fn handle_request(handlers: handlers.Handlers) {
 }
 
 pub fn lessons(req: wisp.Request, h: lessons.LessonHandler) {
-  let path = wisp.path_segments(req)
+  let path = wisp.path_segments(req) |> list.drop(1)
   case path, req.method {
-    ["lessons"], http.Get -> req |> h.list()
-    ["lessons"], http.Post -> req |> h.create()
-    ["lessons", id], http.Get -> h.read(id)
+    [], http.Get -> req |> h.list()
+    [], http.Post -> req |> h.create()
+    [id], _ -> h.read(id)
     _, _ -> wisp.not_found()
   }
 }

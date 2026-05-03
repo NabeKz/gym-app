@@ -34,6 +34,7 @@ fn create(create_lesson: application.CreateLesson, req: Request) -> Response {
 }
 
 fn read(read_lesson: application.ReadLesson, id: String) -> Response {
+  echo 1
   case uuid.from_string(id) {
     Error(_) -> wisp.bad_request("Invalid ID")
     Ok(lesson_uuid) ->
