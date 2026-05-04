@@ -1,0 +1,21 @@
+import features/${FEATURE}/application/command
+import features/${FEATURE}/application/query
+import features/${FEATURE}/sql
+import gleam/result
+import gleam/string
+import pog
+import wisp
+
+// TODO: implement adaptors
+// Example:
+// pub fn create(db: pog.Connection) -> command.CreateAdaptor {
+//   fn(item) {
+//     db
+//     |> sql.create_${FEATURE_SINGULAR}(/* fields */)
+//     |> result.map(fn(_) { item })
+//     |> result.map_error(fn(err) {
+//       wisp.log_error(string.inspect(err))
+//       "Failed to save ${FEATURE_SINGULAR}"
+//     })
+//   }
+// }

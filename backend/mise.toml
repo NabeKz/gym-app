@@ -37,3 +37,30 @@ run = "atlas schema apply --env local --auto-approve"
 [tasks.db-plan]
 description = "Preview schema diff without applying"
 run = "atlas schema apply --env local --dry-run"
+
+[tasks.scaffold]
+description = "Scaffold a new feature under src/features/<name>"
+usage = 'arg "<name>"'
+run = """
+  set -e
+  export FEATURE="${usage_name}"
+  export FEATURE_SINGULAR="${FEATURE%s}"
+  export FEATURE_PASCAL=$(echo "$FEATURE_SINGULAR" | sed -E 's/(^|_)([a-z])/\\u\\2/g; s/_//g')
+
+  FEATURE_DIR="src/features/${FEATURE}"
+  HANDLER_FILE="src/app/handlers/${FEATURE}.gleam"
+  TMPL=".scaffold"
+
+  mkdir -p "${FEATURE_DIR}/application" "${FEATURE_DIR}/adaptor" "${FEATURE_DIR}/sql"
+
+  VARS='${FEATURE} ${FEATURE_PASCAL} ${FEATURE_SINGULAR}'
+  envsubst "$VARS" < "${TMPL}/application.gleam.tmpl"         > "${FEATURE_DIR}/application.gleam"
+  envsubst "$VARS" < "${TMPL}/application/command.gleam.tmpl" > "${FEATURE_DIR}/application/command.gleam"
+  envsubst "$VARS" < "${TMPL}/application/query.gleam.tmpl"   > "${FEATURE_DIR}/application/query.gleam"
+  envsubst "$VARS" < "${TMPL}/adaptor/rdb.gleam.tmpl"         > "${FEATURE_DIR}/adaptor/rdb.gleam"
+  envsubst "$VARS" < "${TMPL}/handler.gleam.tmpl"             > "${HANDLER_FILE}"
+
+  echo "Scaffolded: ${FEATURE} (${FEATURE_PASCAL})"
+  echo "  ${FEATURE_DIR}/"
+  echo "  ${HANDLER_FILE}"
+"""
