@@ -4,6 +4,22 @@ import gleam/int
 import gleam/json
 import gleam/string
 import gleam/time/timestamp
+import youid/uuid.{type Uuid}
+
+pub type CreateReservationInput {
+  CreateReservationInput(
+    lesson_id: Uuid,
+  )
+}
+
+fn decode_create_reservation_input(json_string: String) -> Result(CreateReservationInput, json.DecodeError) {
+  json.parse(json_string, {
+    use lesson_id <- decode.field("lesson_id", decode_uuid_field())
+    decode.success(CreateReservationInput(
+      lesson_id:,
+    ))
+  })
+}
 
 pub type CreateLessonInput {
   CreateLessonInput(
@@ -33,6 +49,22 @@ fn decode_create_lesson_input(json_string: String) -> Result(CreateLessonInput, 
       description:,
     ))
   })
+}
+
+fn validate_create_reservation_input(input: CreateReservationInput) -> Result(CreateReservationInput, List(String)) {
+  let errors =
+    []
+  case errors {
+    [] -> Ok(input)
+    _ -> Error(errors)
+  }
+}
+
+pub fn parse_create_reservation_input(json_string: String) -> Result(CreateReservationInput, List(String)) {
+  case decode_create_reservation_input(json_string) {
+    Error(_) -> Error(["invalid request body"])
+    Ok(input) -> validate_create_reservation_input(input)
+  }
 }
 
 fn validate_create_lesson_input(input: CreateLessonInput) -> Result(CreateLessonInput, List(String)) {
@@ -74,5 +106,13 @@ fn check_min_int(errors: List(String), field: String, value: Int, min: Int) -> L
   case value >= min {
     True -> errors
     False -> [field <> " must be at least " <> int.to_string(min), ..errors]
+  }
+}
+
+fn decode_uuid_field() -> decode.Decoder(uuid.Uuid) {
+  use s <- decode.then(decode.string)
+  case uuid.from_string(s) {
+    Ok(u) -> decode.success(u)
+    Error(_) -> decode.failure(uuid.nil, "UUID")
   }
 }

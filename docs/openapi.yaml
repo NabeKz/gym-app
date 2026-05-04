@@ -4,6 +4,23 @@ info:
   version: "1.0.0"
 
 paths:
+  /reservations:
+    post:
+      summary: 予約作成
+      operationId: createReservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReservationInput"
+      responses:
+        "200":
+          description: 作成した予約
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
   /lessons:
     get:
       summary: レッスン一覧取得
@@ -44,6 +61,15 @@ paths:
 
 components:
   schemas:
+    CreateReservationInput:
+      type: object
+      required:
+        - lesson_id
+      properties:
+        lesson_id:
+          type: string
+          format: uuid
+
     CreateLessonInput:
       type: object
       required:
@@ -102,6 +128,18 @@ components:
         remainingSlots:
           type: integer
         description:
+          type: string
+
+    Reservation:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
           type: string
 
     Exercise:

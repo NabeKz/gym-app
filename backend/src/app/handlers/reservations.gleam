@@ -1,14 +1,14 @@
-import features/reservations/application
 import gleam/json
 import wisp.{type Request, type Response}
 
 import app/handlers/error_responses
 import app/handlers/validation
+import features/reservations/application
 
 pub type ReservationHandler {
   ReservationHandler(
+    create: fn(Request) -> Response,
     // TODO: add handler fields
-    // create: fn(Request) -> Response,
     // read: fn(String) -> Response,
     // list: fn(Request) -> Response,
   )
@@ -20,8 +20,8 @@ pub type ReservationHandler {
 // }
 
 pub fn new(
-// TODO: add parameters
-// create_fn: application.CreateReservation,
+  // TODO: add parameters
+  create: application.CreateReservation,
 ) -> ReservationHandler {
-  todo
+  ReservationHandler(create)
 }

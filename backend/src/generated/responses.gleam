@@ -31,6 +31,20 @@ pub fn encode_lesson(value: Lesson) -> json.Json {
   ])
 }
 
+pub type Reservation {
+  Reservation(
+    id: Uuid,
+    name: String,
+  )
+}
+
+pub fn encode_reservation(value: Reservation) -> json.Json {
+  json.object([
+    #("id", json.string(uuid.to_string(value.id))),
+    #("name", json.string(value.name)),
+  ])
+}
+
 pub type Exercise {
   Exercise(
     id: Int,
