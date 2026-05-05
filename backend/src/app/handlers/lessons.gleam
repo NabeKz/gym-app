@@ -16,7 +16,7 @@ pub type LessonHandler {
 }
 
 fn create(create_lesson: application.CreateLesson, req: Request) -> Response {
-  use body <- wisp.require_string_body(req)
+  use body <- wisp.require_json(req)
 
   use input <- error_responses.require_ok(
     body

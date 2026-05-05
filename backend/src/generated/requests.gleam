@@ -1,7 +1,7 @@
 // This file is auto-generated from openapi.yaml. Do not edit manually.
+import gleam/dynamic.{type Dynamic}
 import gleam/dynamic/decode
 import gleam/int
-import gleam/json
 import gleam/string
 import gleam/time/timestamp
 import youid/uuid.{type Uuid}
@@ -12,8 +12,8 @@ pub type CreateReservationInput {
   )
 }
 
-fn decode_create_reservation_input(json_string: String) -> Result(CreateReservationInput, json.DecodeError) {
-  json.parse(json_string, {
+fn decode_create_reservation_input(value: Dynamic) -> Result(CreateReservationInput, List(decode.DecodeError)) {
+  decode.run(value, {
     use lesson_id <- decode.field("lesson_id", decode_uuid_field())
     decode.success(CreateReservationInput(
       lesson_id:,
@@ -32,8 +32,8 @@ pub type CreateLessonInput {
   )
 }
 
-fn decode_create_lesson_input(json_string: String) -> Result(CreateLessonInput, json.DecodeError) {
-  json.parse(json_string, {
+fn decode_create_lesson_input(value: Dynamic) -> Result(CreateLessonInput, List(decode.DecodeError)) {
+  decode.run(value, {
     use name <- decode.field("name", decode.string)
     use instructor <- decode.field("instructor", decode.string)
     use starts_at <- decode.field("startsAt", decode.string)
@@ -60,8 +60,8 @@ fn validate_create_reservation_input(input: CreateReservationInput) -> Result(Cr
   }
 }
 
-pub fn parse_create_reservation_input(json_string: String) -> Result(CreateReservationInput, List(String)) {
-  case decode_create_reservation_input(json_string) {
+pub fn parse_create_reservation_input(value: Dynamic) -> Result(CreateReservationInput, List(String)) {
+  case decode_create_reservation_input(value) {
     Error(_) -> Error(["invalid request body"])
     Ok(input) -> validate_create_reservation_input(input)
   }
@@ -81,8 +81,8 @@ fn validate_create_lesson_input(input: CreateLessonInput) -> Result(CreateLesson
   }
 }
 
-pub fn parse_create_lesson_input(json_string: String) -> Result(CreateLessonInput, List(String)) {
-  case decode_create_lesson_input(json_string) {
+pub fn parse_create_lesson_input(value: Dynamic) -> Result(CreateLessonInput, List(String)) {
+  case decode_create_lesson_input(value) {
     Error(_) -> Error(["invalid request body"])
     Ok(input) -> validate_create_lesson_input(input)
   }

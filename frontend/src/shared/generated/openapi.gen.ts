@@ -4,6 +4,10 @@
  * Gym App API
  * OpenAPI spec version: 1.0.0
  */
+export interface CreateReservationInput {
+  lesson_id: string
+}
+
 export interface CreateLessonInput {
   /** @minLength 1 */
   name: string
@@ -25,6 +29,11 @@ export interface Lesson {
   capacity: number
   remainingSlots: number
   description: string
+}
+
+export interface Reservation {
+  id: string
+  name: string
 }
 
 export interface Exercise {
@@ -60,6 +69,41 @@ export type GetLessonsParams = {
    * 指定日のレッスンに絞り込む (YYYY-MM-DD)
    */
   date?: string
+}
+
+/**
+ * @summary 予約作成
+ */
+export type createReservationResponse200 = {
+  data: Reservation
+  status: 200
+}
+
+export type createReservationResponseSuccess = createReservationResponse200 & {
+  headers: Headers
+}
+
+export type createReservationResponse = createReservationResponseSuccess
+
+export const getCreateReservationUrl = () => {
+  return `http://localhost:8000/reservations`
+}
+
+export const createReservation = async (
+  createReservationInput: CreateReservationInput,
+  options?: RequestInit,
+): Promise<createReservationResponse> => {
+  const res = await fetch(getCreateReservationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createReservationInput),
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: createReservationResponse["data"] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as createReservationResponse
 }
 
 /**

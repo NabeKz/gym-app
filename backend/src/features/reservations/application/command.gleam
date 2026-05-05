@@ -1,5 +1,5 @@
 import generated/requests
-import generated/responses.{type Reservation, Reservation}
+import generated/responses.{type Reservation}
 
 pub type CreateAdaptor =
   fn(Reservation) -> Result(Reservation, String)
@@ -8,12 +8,13 @@ pub type Create =
   fn(requests.CreateReservationInput) -> Result(Reservation, String)
 
 pub fn create(adaptor: CreateAdaptor) -> Create {
-  fn(input) { do_create(adaptor, input) }
+  do_create(adaptor, _)
 }
 
 fn do_create(
-  adaptor: CreateAdaptor,
+  _adaptor: CreateAdaptor,
   input: requests.CreateReservationInput,
 ) -> Result(Reservation, String) {
-  todo
+  responses.Reservation(id: input.lesson_id, name: "sample")
+  |> Ok()
 }

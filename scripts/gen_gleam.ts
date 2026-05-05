@@ -75,10 +75,10 @@ if (requestSchemas.length > 0) {
   const needsUuid = hasUuidFields(requestSchemaMap);
 
   const requestImports = [
+    "import gleam/dynamic.{type Dynamic}",
     "import gleam/dynamic/decode",
     needsFloat ? "import gleam/float" : null,
     needsInt ? "import gleam/int" : null,
-    "import gleam/json",
     hasOptional ? "import gleam/option.{type Option}" : null,
     needsString ? "import gleam/string" : null,
     needsTimestamp ? "import gleam/time/timestamp" : null,

@@ -119,8 +119,8 @@ export function generateValidatorBlock(
     `  }\n}`;
 
   const parseFn =
-    `pub fn parse_${toSnakeCase(name)}(json_string: String) -> Result(${name}, List(String)) {\n` +
-    `  case decode_${toSnakeCase(name)}(json_string) {\n` +
+    `pub fn parse_${toSnakeCase(name)}(value: Dynamic) -> Result(${name}, List(String)) {\n` +
+    `  case decode_${toSnakeCase(name)}(value) {\n` +
     `    Error(_) -> Error(["invalid request body"])\n` +
     `    Ok(input) -> validate_${toSnakeCase(name)}(input)\n` +
     `  }\n}`;

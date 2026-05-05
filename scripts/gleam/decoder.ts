@@ -70,8 +70,8 @@ export function generateDecoderBlock(name: string, schema: Schema): string {
     .join(",\n");
 
   const decoderFn =
-    `fn decode_${toSnakeCase(name)}(json_string: String) -> Result(${name}, json.DecodeError) {\n` +
-    `  json.parse(json_string, {\n` +
+    `fn decode_${toSnakeCase(name)}(value: Dynamic) -> Result(${name}, List(decode.DecodeError)) {\n` +
+    `  decode.run(value, {\n` +
     fieldLines.join("\n") + "\n" +
     `    decode.success(${name}(\n${constructorArgs},\n    ))\n` +
     `  })\n}`;

@@ -10,4 +10,4 @@ SELECT
 FROM
     app.lessons
 WHERE
-    id = $ 1
+    id = $1
