@@ -12,9 +12,9 @@ pub fn create(adaptor: CreateAdaptor) -> Create {
 }
 
 fn do_create(
-  _adaptor: CreateAdaptor,
+  adaptor: CreateAdaptor,
   input: requests.CreateReservationInput,
 ) -> Result(Reservation, String) {
   responses.Reservation(id: input.lesson_id, name: "sample")
-  |> Ok()
+  |> adaptor()
 }

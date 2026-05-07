@@ -6,28 +6,36 @@ gleam = "latest"
 rebar = "latest"
 watchexec = "latest"
 
+[env]
+DATABASE_URL = "postgresql://postgres:dev@localhost:5432/gym_app"
+
 [tasks.gen]
 description = "Generate Gleam types from openapi.yaml"
 dir = "../scripts"
 run = "bun run gen"
 
-[tasks.db-local-up]
-description = "Start local PostgreSQL via Docker Compose"
-dir = ".."
-run = "docker compose up -d db"
+[tasks.docker-up]
+hide = true
+run = "docker compose -f ../compose.yml up -d"
 
-[tasks.db-local-migrate]
+[tasks.db-migrate]
 description = "Apply schema to local Docker DB"
-run = "atlas schema apply --env local --auto-approve"
+depends = ["docker-up"]
+run = """
+atlas schema apply --env local --auto-approve
+"""
 
 [tasks.gen-sql]
 description = "Generate type-safe Gleam functions from SQL files (requires local DB)"
-run = "DATABASE_URL='postgresql://postgres:dev@localhost:5432/gym_app' gleam run -m squirrel"
+depends = ["docker-up"]
+run = """
+  gleam run -m squirrel
+"""
 
 [tasks.dev]
 description = "dev"
 run = """
-  DATABASE_URL='postgresql://postgres:dev@localhost:5432/gym_app' watchexec -w src -r --stop-timeout 0 --stop-signal SIGKILL -- gleam run
+  watchexec -w src -r --stop-timeout 0 --stop-signal SIGKILL -- gleam run
 """
 
 [tasks.db-apply]
@@ -37,30 +45,3 @@ run = "atlas schema apply --env local --auto-approve"
 [tasks.db-plan]
 description = "Preview schema diff without applying"
 run = "atlas schema apply --env local --dry-run"
-
-[tasks.scaffold]
-description = "Scaffold a new feature under src/features/<name>"
-usage = 'arg "<name>"'
-run = """
-  set -e
-  export FEATURE="${usage_name}"
-  export FEATURE_SINGULAR="${FEATURE%s}"
-  export FEATURE_PASCAL=$(echo "$FEATURE_SINGULAR" | sed -E 's/(^|_)([a-z])/\\u\\2/g; s/_//g')
-
-  FEATURE_DIR="src/features/${FEATURE}"
-  HANDLER_FILE="src/app/handlers/${FEATURE}.gleam"
-  TMPL=".scaffold"
-
-  mkdir -p "${FEATURE_DIR}/application" "${FEATURE_DIR}/adaptor" "${FEATURE_DIR}/sql"
-
-  VARS='${FEATURE} ${FEATURE_PASCAL} ${FEATURE_SINGULAR}'
-  envsubst "$VARS" < "${TMPL}/application.gleam.tmpl"         > "${FEATURE_DIR}/application.gleam"
-  envsubst "$VARS" < "${TMPL}/application/command.gleam.tmpl" > "${FEATURE_DIR}/application/command.gleam"
-  envsubst "$VARS" < "${TMPL}/application/query.gleam.tmpl"   > "${FEATURE_DIR}/application/query.gleam"
-  envsubst "$VARS" < "${TMPL}/adaptor/rdb.gleam.tmpl"         > "${FEATURE_DIR}/adaptor/rdb.gleam"
-  envsubst "$VARS" < "${TMPL}/handler.gleam.tmpl"             > "${HANDLER_FILE}"
-
-  echo "Scaffolded: ${FEATURE} (${FEATURE_PASCAL})"
-  echo "  ${FEATURE_DIR}/"
-  echo "  ${HANDLER_FILE}"
-"""

@@ -39,3 +39,9 @@ description = "db connect"
 run = """
   docker compose exec -e PGOPTIONS="-c search_path=app" db psql -U postgres -d gym_app
 """
+
+[tasks.puml]
+description = "puml"
+run = """
+  docker run -d -p 8080:8080 plantuml/plantuml-server:jetty
+"""

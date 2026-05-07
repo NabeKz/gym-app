@@ -42,3 +42,12 @@ table "lessons" {
     columns = [column.id]
   }
 }
+
+table "reservations" {
+  schema = schema.app
+
+  column "id" {
+    type = uuid
+    null = false
+  }
+}
