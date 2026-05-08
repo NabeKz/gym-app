@@ -45,3 +45,14 @@ run = "atlas schema apply --env local --auto-approve"
 [tasks.db-plan]
 description = "Preview schema diff without applying"
 run = "atlas schema apply --env local --dry-run"
+
+[tasks.gen-erd]
+description = "Generate Mermaid ER diagram from schema.hcl"
+run = """
+  echo '```mermaid' > ../docs/erd.md
+  atlas schema inspect \
+    --env local \
+    --format "{% raw %}{{ mermaid . }}{% endraw %}" \
+    >> ../docs/erd.md
+  echo '```' >> ../docs/erd.md
+"""
