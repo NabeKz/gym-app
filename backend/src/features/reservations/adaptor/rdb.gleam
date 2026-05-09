@@ -1,5 +1,4 @@
 import generated/responses
-import gleam/result
 import gleam/string
 import pog
 import wisp
@@ -7,17 +6,19 @@ import wisp
 import features/reservations/application/command
 import features/reservations/sql
 
-pub fn create(
+pub fn create(db: pog.Connection) -> command.SaveReservation {
+  do_create(db, _)
+}
+
+fn do_create(
   db: pog.Connection,
   reservation: responses.Reservation,
-) -> command.CreateAdaptor {
-  fn(item) {
-    db
-    |> sql.create_reservation(reservation.id)
-    |> result.map(fn(_) { item })
-    |> result.map_error(fn(err) {
+) -> Result(responses.Reservation, String) {
+  case db |> sql.create_reservation(reservation.id) {
+    Ok(_) -> reservation |> Ok()
+    Error(err) -> {
       wisp.log_error(string.inspect(err))
-      "Failed to save reservation"
-    })
+      "Failed to save reservation" |> Error()
+    }
   }
 }

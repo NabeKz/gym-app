@@ -30,7 +30,7 @@ fn do_create(db: pog.Connection, lesson: Lesson) -> Result(Lesson, String) {
   })
 }
 
-pub fn create(db: pog.Connection) -> command.CreateAdaptor {
+pub fn create(db: pog.Connection) -> command.SaveLesson {
   do_create(db, _)
 }
 

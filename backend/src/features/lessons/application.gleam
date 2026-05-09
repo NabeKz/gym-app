@@ -2,7 +2,7 @@ import features/lessons/application/command
 import features/lessons/application/query
 
 pub type CreateLesson =
-  command.Create
+  command.CreateLesson
 
 pub type ReadLesson =
   query.ReadLesson
@@ -10,8 +10,8 @@ pub type ReadLesson =
 pub type ListLesson =
   query.LessonList
 
-pub type CreateAdaptor =
-  command.CreateAdaptor
+pub type SaveLesson =
+  command.SaveLesson
 
 pub type ListAdaptor =
   query.ListAdaptor

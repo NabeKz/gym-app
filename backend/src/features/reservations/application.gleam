@@ -1,9 +1,9 @@
 import features/reservations/application/command
 
 pub type CreateReservation =
-  command.Create
+  command.CreateReservation
 
-pub type CreateAdaptor =
-  command.CreateAdaptor
+pub type SaveReservation =
+  command.SaveReservation
 
 pub const create = command.create

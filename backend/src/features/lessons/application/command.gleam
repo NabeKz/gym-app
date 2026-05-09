@@ -4,14 +4,14 @@ import youid/uuid
 import generated/requests
 import generated/responses.{type Lesson, Lesson}
 
-pub type CreateAdaptor =
+pub type SaveLesson =
   fn(Lesson) -> Result(Lesson, String)
 
-pub type Create =
+pub type CreateLesson =
   fn(requests.CreateLessonInput) -> Result(Lesson, String)
 
 fn do_create(
-  adaptor: CreateAdaptor,
+  adaptor: SaveLesson,
   input: requests.CreateLessonInput,
 ) -> Result(Lesson, String) {
   let id = uuid.v4()
@@ -30,6 +30,6 @@ fn do_create(
   |> adaptor()
 }
 
-pub fn create(adaptor: CreateAdaptor) -> Create {
-  fn(input) { do_create(adaptor, input) }
+pub fn create(adaptor: SaveLesson) -> CreateLesson {
+  do_create(adaptor, _)
 }
