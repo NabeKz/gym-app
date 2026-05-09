@@ -2,6 +2,7 @@
 dotenvx = "latest"
 jq = "latest"
 bun = "latest"
+gh = "latest"
 
 [tasks.dev-all]
 description = "dev-all"
