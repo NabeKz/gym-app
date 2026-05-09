@@ -16,7 +16,7 @@ run = "bun run gen"
 
 [tasks.docker-up]
 hide = true
-run = "docker compose -f ../compose.yml up -d"
+run = "docker compose up -d"
 
 [tasks.db-migrate]
 description = "Apply schema to local Docker DB"

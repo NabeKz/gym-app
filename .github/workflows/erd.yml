@@ -1,0 +1,34 @@
+name: Generate ER Diagram
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - backend/db/schema.hcl
+
+jobs:
+  gen-erd:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
+
+      - name: Start Docker DB
+        working-directory: backend
+        run: docker compose up -d
+
+      - name: Apply schema
+        working-directory: backend
+        run: mise run db-migrate
+
+      - name: Generate ER diagram
+        working-directory: backend
+        run: mise run gen-erd
+
+      - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        with:
+          commit_message: "chore: update ER diagram"
+          file_pattern: docs/erd.md
