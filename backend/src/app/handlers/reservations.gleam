@@ -1,35 +1,35 @@
-// import gleam/json
-// import gleam/http/request
 import generated/requests
+import generated/responses
 import gleam/json
 import wisp.{type Request, type Response}
 
-// import app/handlers/error_responses
-// import app/handlers/validation
+import app/handlers/error_responses
 import features/reservations/application
 
 pub type ReservationHandler {
-  ReservationHandler(
-    create: fn(Request) -> Response,
-    // TODO: add handler fields
-    // read: fn(String) -> Response,
-    // list: fn(Request) -> Response,
-  )
+  ReservationHandler(create: fn(Request) -> Response)
 }
 
-// TODO: implement handler functions
 fn create(create_fn: application.CreateReservation, req: Request) -> Response {
   use json <- wisp.require_json(req)
 
-  case json |> requests.parse_create_reservation_input {
-    Ok(input) -> todo
-    Error(err) -> todo
+  use input <- error_responses.require_ok(
+    json |> requests.parse_create_reservation_input,
+  )
+  case input |> create_fn() {
+    Ok(reservation) -> {
+      reservation
+      |> responses.encode_reservation()
+      |> json.to_string()
+      |> wisp.json_response(201)
+    }
+
+    Error(err) -> {
+      wisp.bad_request(err)
+    }
   }
 }
 
-pub fn new(
-  // TODO: add parameters
-  create_fn: application.CreateReservation,
-) -> ReservationHandler {
+pub fn new(create_fn: application.CreateReservation) -> ReservationHandler {
   ReservationHandler(create: create(create_fn, _))
 }
