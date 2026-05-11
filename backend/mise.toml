@@ -46,6 +46,13 @@ run = "atlas schema apply --env local --auto-approve"
 description = "Preview schema diff without applying"
 run = "atlas schema apply --env local --dry-run"
 
+[tasks.db-seed]
+description = "Insert seed data via usecase layer"
+depends = ["db-migrate"]
+run = """
+  gleam run -m seed
+"""
+
 [tasks.gen-erd]
 description = "Generate Mermaid ER diagram from schema.hcl"
 run = """
