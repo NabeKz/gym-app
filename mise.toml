@@ -39,7 +39,59 @@ run = """
 """
 
 [tasks.puml]
-description = "puml"
+description = "Build and start PlantUML server with Japanese font support"
 run = """
-  docker run -d -p 8080:8080 plantuml/plantuml-server:jetty
+  docker build -f Dockerfile.plantuml -t gym-app/plantuml-server .
+  docker run -d -p 8080:8080 --name plantuml-server --rm gym-app/plantuml-server
 """
+
+[tasks.puml-view]
+description = "Render PlantUML file via server and preview in terminal"
+usage = "arg <file>"
+run = """
+  FILE={{arg(name='file')}}
+  if ! curl -sf "http://localhost:8080/" > /dev/null 2>&1; then
+    echo "PlantUML server is not running. Start it with: mise run puml"
+    exit 1
+  fi
+  ENCODED=$(curl -s -D - -o /dev/null -X POST "http://localhost:8080/form" \
+    --data-urlencode "text@$FILE" \
+    | grep -i location | sed 's|.*http://localhost:8080/uml/||' | tr -d '\r')
+  curl -s "http://localhost:8080/png/$ENCODED" | wezterm imgcat
+"""
+
+[tasks.puml-watch]
+description = "Watch PlantUML file and auto-preview on save"
+usage = "arg <file>"
+run = """
+  FILE={{arg(name='file')}}
+  render() {
+    if ! curl -sf "http://localhost:8080/" > /dev/null 2>&1; then
+      echo "PlantUML server is not running. Start it with: mise run puml"
+      return
+    fi
+    ENCODED=$(curl -s -D - -o /dev/null -X POST "http://localhost:8080/form" \
+      --data-urlencode "text@$FILE" \
+      | grep -i location | sed 's|.*http://localhost:8080/uml/||' | tr -d '\r')
+    clear
+    curl -s "http://localhost:8080/png/$ENCODED" | wezterm imgcat
+  }
+  render
+  watchexec --watch "$FILE" --on-busy-update do-nothing -- bash -c "$(declare -f render); FILE='$FILE' render"
+"""
+
+[tasks.puml-open]
+description = "Open PlantUML file in browser via server"
+usage = "arg <file>"
+run = """
+  FILE={{arg(name='file')}}
+  if ! curl -sf "http://localhost:8080/" > /dev/null 2>&1; then
+    echo "PlantUML server is not running. Start it with: mise run puml"
+    exit 1
+  fi
+  ENCODED=$(curl -s -D - -o /dev/null -X POST "http://localhost:8080/form" \
+    --data-urlencode "text@$FILE" \
+    | grep -i location | sed 's|.*http://localhost:8080/uml/||' | tr -d '\r')
+  xdg-open "http://localhost:8080/png/$ENCODED"
+"""
+

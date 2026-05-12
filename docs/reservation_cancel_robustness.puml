@@ -1,0 +1,24 @@
+@startuml reservation_cancel_robustness
+title 予約キャンセル — ロバストネス図
+
+left to right direction
+
+actor 会員 as member
+
+boundary "DELETE /reservations/{id}" as b_cancel
+
+control cancel_reservation as c_cancel
+
+entity "Reservation\n(id, lesson_id)" as e_reservation
+entity "Lesson\n(id, remaining_slots)" as e_lesson
+
+note "※ キャンセル後のデータ保持\n（DELETE vs アーカイブ）未決定" as n_tbd
+
+member --> b_cancel
+b_cancel --> c_cancel
+c_cancel --> e_reservation : 存在確認 / 削除
+c_cancel --> e_lesson : remaining_slots +1
+
+n_tbd .. e_reservation
+
+@enduml
