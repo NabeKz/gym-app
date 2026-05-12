@@ -5,20 +5,25 @@ left to right direction
 
 actor 会員 as member
 
-boundary "DELETE /reservations/{id}" as b_cancel
+boundary "予約をキャンセルする" as b_cancel
 
-control cancel_reservation as c_cancel
+control "予約の存在と所有権を確認する" as c_check
+control "レッスン開始前か確認する"     as c_lesson_check
+control "キャンセルを記録する"         as c_record
 
-entity "Reservation\n(id, lesson_id)" as e_reservation
-entity "Lesson\n(id, remaining_slots)" as e_lesson
-
-note "※ キャンセル後のデータ保持\n（DELETE vs アーカイブ）未決定" as n_tbd
+entity Reservation         as e_reservation
+entity CancelledReservation as e_cancelled
+entity Lesson              as e_lesson
 
 member --> b_cancel
-b_cancel --> c_cancel
-c_cancel --> e_reservation : 存在確認 / 削除
-c_cancel --> e_lesson : remaining_slots +1
+b_cancel --> c_check
+b_cancel --> c_lesson_check
+b_cancel --> c_record
 
-n_tbd .. e_reservation
+c_check --> e_reservation
+c_lesson_check --> e_lesson
+c_record --> e_reservation
+c_record --> e_cancelled
+c_record --> e_lesson
 
 @enduml
