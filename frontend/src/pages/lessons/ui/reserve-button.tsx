@@ -29,7 +29,7 @@ export const ReserveButton = ({ lesson }: { lesson: Lesson }) => {
   }
 
   return (
-    <div className={hstack({ gap: "sm" })}>
+    <div className={hstack({ gap: "sm", border: "1px solid" })}>
       {state === "error" && <span className={errorText}>予約に失敗しました</span>}
       <button
         onClick={handleReserve}
@@ -56,7 +56,7 @@ const reserveBtn = cva({
       true: { bg: "gray.100", color: "gray.400", cursor: "not-allowed" },
       false: {
         bg: "blue.600",
-        color: "white",
+        color: "black",
         _hover: { bg: "blue.700" },
         _disabled: { opacity: "0.5", cursor: "not-allowed" },
       },

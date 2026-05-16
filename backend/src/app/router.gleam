@@ -17,9 +17,7 @@ pub fn handle_request(handlers: handlers.Handlers) {
       }
 
       ["lessons", ..path] -> req |> lessons(path, handlers.lessons)
-      ["reservation", ..path] ->
-        req |> reservations(path, handlers.reservations)
-
+      ["reservations", ..path] -> req |> reservations(path, handlers.reservations)
       _ -> {
         wisp.log_warning("User requested a route that does not exist")
         wisp.not_found()

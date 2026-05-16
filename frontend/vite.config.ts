@@ -5,6 +5,14 @@ import { resolve } from "node:path"
 
 export default defineConfig({
   plugins: [tanstackRouter({ routesDirectory: "./src/app/routes" }), react()],
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8000",
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": resolve(import.meta.dirname, "src"),

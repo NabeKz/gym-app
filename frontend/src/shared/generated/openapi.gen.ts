@@ -86,7 +86,7 @@ export type createReservationResponseSuccess = createReservationResponse200 & {
 export type createReservationResponse = createReservationResponseSuccess
 
 export const getCreateReservationUrl = () => {
-  return `http://localhost:8000/reservations`
+  return `/api/reservations`
 }
 
 export const createReservation = async (
@@ -131,9 +131,7 @@ export const getGetLessonsUrl = (params?: GetLessonsParams) => {
 
   const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0
-    ? `http://localhost:8000/lessons?${stringifiedParams}`
-    : `http://localhost:8000/lessons`
+  return stringifiedParams.length > 0 ? `/api/lessons?${stringifiedParams}` : `/api/lessons`
 }
 
 export const getLessons = async (
@@ -166,7 +164,7 @@ export type createLessonResponseSuccess = createLessonResponse200 & {
 export type createLessonResponse = createLessonResponseSuccess
 
 export const getCreateLessonUrl = () => {
-  return `http://localhost:8000/lessons`
+  return `/api/lessons`
 }
 
 export const createLesson = async (
