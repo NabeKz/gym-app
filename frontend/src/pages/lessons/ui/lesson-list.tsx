@@ -57,7 +57,9 @@ export const LessonList = ({ promise }: { promise: ReturnType<typeof getLessons>
 }
 
 const card = css({
-  border: "[1px solid token(colors.gray.200)]",
+  borderWidth: "1px",
+  borderStyle: "solid",
+  borderColor: "gray.200",
   borderRadius: "lg",
   p: "lg",
   bg: "white",
