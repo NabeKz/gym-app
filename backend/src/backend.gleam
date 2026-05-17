@@ -26,6 +26,12 @@ pub fn main() {
       ),
       reservations: reservations.new(
         conn |> reservations_rdb.create |> reservations_app.create,
+        reservations_app.cancel(
+          reservations_rdb.read_reservation_info(conn),
+          reservations_rdb.delete_reservation(conn),
+          lessons_rdb.read(conn),
+          reservations_rdb.increment_remaining_slots(conn),
+        ),
       ),
     )
 

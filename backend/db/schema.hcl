@@ -50,4 +50,21 @@ table "reservations" {
     type = uuid
     null = false
   }
+  column "lesson_id" {
+    type = uuid
+    null = false
+  }
+  column "member_id" {
+    type = uuid
+    null = false
+  }
+
+  primary_key {
+    columns = [column.id]
+  }
+
+  foreign_key "reservations_lesson_id_fkey" {
+    columns     = [column.lesson_id]
+    ref_columns = [table.lessons.column.id]
+  }
 }

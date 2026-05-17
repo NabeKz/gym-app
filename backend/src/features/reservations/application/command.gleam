@@ -1,22 +1,95 @@
-import generated/requests
-import generated/responses.{type Reservation, Reservation}
+import gleam/order
+import gleam/result
+import gleam/time/timestamp
 import youid/uuid
 
+import generated/requests
+import generated/responses.{type Lesson, type Reservation}
+
 pub type SaveReservation =
-  fn(Reservation) -> Result(Reservation, String)
+  fn(ReservationInfo) -> Result(Reservation, String)
 
 pub type CreateReservation =
-  fn(requests.CreateReservationInput) -> Result(Reservation, String)
+  fn(uuid.Uuid, requests.CreateReservationInput) -> Result(Reservation, String)
 
 pub fn create(adaptor: SaveReservation) -> CreateReservation {
-  do_create(adaptor, _)
+  fn(member_id, input) { do_create(adaptor, member_id, input) }
 }
 
 fn do_create(
   adaptor: SaveReservation,
-  _input: requests.CreateReservationInput,
+  member_id: uuid.Uuid,
+  input: requests.CreateReservationInput,
 ) -> Result(Reservation, String) {
-  uuid.v4()
-  |> Reservation(name: "")
+  ReservationInfo(id: uuid.v4(), lesson_id: input.lesson_id, member_id:)
   |> adaptor()
+}
+
+pub type ReservationInfo {
+  ReservationInfo(
+    id: uuid.Uuid,
+    lesson_id: uuid.Uuid,
+    member_id: uuid.Uuid,
+  )
+}
+
+pub type ReadReservationInfo =
+  fn(uuid.Uuid) -> Result(ReservationInfo, String)
+
+pub type DeleteReservation =
+  fn(uuid.Uuid) -> Result(Nil, String)
+
+pub type ReadLessonForCancel =
+  fn(uuid.Uuid) -> Result(Lesson, String)
+
+pub type IncrementRemainingSlots =
+  fn(uuid.Uuid) -> Result(Nil, String)
+
+pub type CancelInput {
+  CancelInput(
+    reservation_id: uuid.Uuid,
+    member_id: uuid.Uuid,
+    now: timestamp.Timestamp,
+  )
+}
+
+pub type Cancel =
+  fn(CancelInput) -> Result(Nil, String)
+
+pub fn cancel(
+  read_reservation: ReadReservationInfo,
+  delete_reservation: DeleteReservation,
+  read_lesson: ReadLessonForCancel,
+  increment_slots: IncrementRemainingSlots,
+) -> Cancel {
+  do_cancel(read_reservation, delete_reservation, read_lesson, increment_slots, _)
+}
+
+fn check_ownership(reservation: ReservationInfo, member_id: uuid.Uuid) -> Result(Nil, String) {
+  case reservation.member_id == member_id {
+    True -> Ok(Nil)
+    False -> Error("not your reservation")
+  }
+}
+
+fn check_not_started(now: timestamp.Timestamp, lesson: Lesson) -> Result(Nil, String) {
+  case timestamp.compare(now, lesson.starts_at) {
+    order.Lt -> Ok(Nil)
+    _ -> Error("lesson has already started")
+  }
+}
+
+fn do_cancel(
+  read_reservation: ReadReservationInfo,
+  delete_reservation: DeleteReservation,
+  read_lesson: ReadLessonForCancel,
+  increment_slots: IncrementRemainingSlots,
+  input: CancelInput,
+) -> Result(Nil, String) {
+  use reservation <- result.try(read_reservation(input.reservation_id))
+  use _ <- result.try(check_ownership(reservation, input.member_id))
+  use lesson <- result.try(read_lesson(reservation.lesson_id))
+  use _ <- result.try(check_not_started(input.now, lesson))
+  use _ <- result.try(delete_reservation(input.reservation_id))
+  increment_slots(reservation.lesson_id)
 }

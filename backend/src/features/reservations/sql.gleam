@@ -17,21 +17,126 @@ import youid/uuid.{type Uuid}
 pub fn create_reservation(
   db: pog.Connection,
   arg_1: Uuid,
+  arg_2: Uuid,
+  arg_3: Uuid,
 ) -> Result(pog.Returned(Nil), pog.QueryError) {
   let decoder = decode.map(decode.dynamic, fn(_) { Nil })
 
   "INSERT INTO
     app.reservations
     (
-      id
+      id,
+      lesson_id,
+      member_id
     )
 VALUES
     (
-        $1
+        $1,
+        $2,
+        $3
     );
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.parameter(pog.text(uuid.to_string(arg_2)))
+  |> pog.parameter(pog.text(uuid.to_string(arg_3)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
+/// Runs the `delete_reservation` query
+/// defined in `./src/features/reservations/sql/delete_reservation.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn delete_reservation(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(Nil), pog.QueryError) {
+  let decoder = decode.map(decode.dynamic, fn(_) { Nil })
+
+  "DELETE FROM app.reservations
+WHERE id = $1;
 "
   |> pog.query
   |> pog.parameter(pog.text(uuid.to_string(arg_1)))
   |> pog.returning(decoder)
   |> pog.execute(db)
+}
+
+/// Runs the `increment_remaining_slots` query
+/// defined in `./src/features/reservations/sql/increment_remaining_slots.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn increment_remaining_slots(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(Nil), pog.QueryError) {
+  let decoder = decode.map(decode.dynamic, fn(_) { Nil })
+
+  "UPDATE app.lessons
+SET remaining_slots = remaining_slots + 1
+WHERE id = $1;
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
+/// A row you get from running the `read_reservation_info` query
+/// defined in `./src/features/reservations/sql/read_reservation_info.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type ReadReservationInfoRow {
+  ReadReservationInfoRow(id: Uuid, lesson_id: Uuid, member_id: Uuid)
+}
+
+/// Runs the `read_reservation_info` query
+/// defined in `./src/features/reservations/sql/read_reservation_info.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn read_reservation_info(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(ReadReservationInfoRow), pog.QueryError) {
+  let decoder = {
+    use id <- decode.field(0, uuid_decoder())
+    use lesson_id <- decode.field(1, uuid_decoder())
+    use member_id <- decode.field(2, uuid_decoder())
+    decode.success(ReadReservationInfoRow(id:, lesson_id:, member_id:))
+  }
+
+  "SELECT
+    id,
+    lesson_id,
+    member_id
+FROM
+    app.reservations
+WHERE
+    id = $1;
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
+// --- Encoding/decoding utils -------------------------------------------------
+
+/// A decoder to decode `Uuid`s coming from a Postgres query.
+///
+fn uuid_decoder() {
+  use bit_array <- decode.then(decode.bit_array)
+  case uuid.from_bit_array(bit_array) {
+    Ok(uuid) -> decode.success(uuid)
+    Error(_) -> decode.failure(uuid.v7(), "Uuid")
+  }
 }

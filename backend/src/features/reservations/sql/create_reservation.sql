@@ -1,9 +1,13 @@
 INSERT INTO
     app.reservations
     (
-      id
+      id,
+      lesson_id,
+      member_id
     )
 VALUES
     (
-        $1
+        $1,
+        $2,
+        $3
     );

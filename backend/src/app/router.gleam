@@ -45,8 +45,8 @@ pub fn reservations(
   h: reservations.ReservationHandler,
 ) {
   case path, req.method {
-    [], http.Get -> wisp.ok()
     [], http.Post -> req |> h.create()
+    [id], http.Delete -> req |> h.cancel(id)
     _, _ -> wisp.not_found()
   }
 }
