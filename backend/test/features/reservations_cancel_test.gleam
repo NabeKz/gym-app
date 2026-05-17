@@ -1,3 +1,5 @@
+// User Story: 会員として、不要になった予約をキャンセルしたい（requirements.md）
+
 import gleeunit/should
 
 pub fn cancel_success_test() {

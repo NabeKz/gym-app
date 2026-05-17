@@ -1,5 +1,6 @@
 import generated/requests
-import generated/responses.{type Reservation}
+import generated/responses.{type Reservation, Reservation}
+import youid/uuid
 
 pub type SaveReservation =
   fn(Reservation) -> Result(Reservation, String)
@@ -13,8 +14,9 @@ pub fn create(adaptor: SaveReservation) -> CreateReservation {
 
 fn do_create(
   adaptor: SaveReservation,
-  input: requests.CreateReservationInput,
+  _input: requests.CreateReservationInput,
 ) -> Result(Reservation, String) {
-  responses.Reservation(id: input.lesson_id, name: "sample")
+  uuid.v4()
+  |> Reservation(name: "")
   |> adaptor()
 }
