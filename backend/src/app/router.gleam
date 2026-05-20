@@ -1,3 +1,4 @@
+import app/handlers/auth
 import app/handlers/reservations
 import gleam/http
 import wisp.{type Request, type Response}
@@ -16,6 +17,7 @@ pub fn handle_request(handlers: handlers.Handlers) {
         wisp.ok()
       }
 
+      ["auth", ..path] -> req |> auth_routes(path, handlers.auth)
       ["lessons", ..path] -> req |> lessons(path, handlers.lessons)
       ["reservations", ..path] -> req |> reservations(path, handlers.reservations)
       _ -> {
@@ -23,6 +25,19 @@ pub fn handle_request(handlers: handlers.Handlers) {
         wisp.not_found()
       }
     }
+  }
+}
+
+pub fn auth_routes(
+  req: wisp.Request,
+  path: List(String),
+  h: auth.AuthHandler,
+) {
+  case path, req.method {
+    ["signup"], http.Post -> req |> h.signup()
+    ["login"], http.Post -> req |> h.login()
+    ["logout"], http.Post -> req |> h.logout()
+    _, _ -> wisp.not_found()
   }
 }
 

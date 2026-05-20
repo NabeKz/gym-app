@@ -6,6 +6,24 @@ import gleam/string
 import gleam/time/timestamp
 import youid/uuid.{type Uuid}
 
+pub type AuthInput {
+  AuthInput(
+    email: String,
+    password: String,
+  )
+}
+
+fn decode_auth_input(value: Dynamic) -> Result(AuthInput, List(decode.DecodeError)) {
+  decode.run(value, {
+    use email <- decode.field("email", decode.string)
+    use password <- decode.field("password", decode.string)
+    decode.success(AuthInput(
+      email:,
+      password:,
+    ))
+  })
+}
+
 pub type CreateReservationInput {
   CreateReservationInput(
     lesson_id: Uuid,
@@ -49,6 +67,24 @@ fn decode_create_lesson_input(value: Dynamic) -> Result(CreateLessonInput, List(
       description:,
     ))
   })
+}
+
+fn validate_auth_input(input: AuthInput) -> Result(AuthInput, List(String)) {
+  let errors =
+    []
+    |> check_min_length("email", input.email, 1)
+    |> check_min_length("password", input.password, 8)
+  case errors {
+    [] -> Ok(input)
+    _ -> Error(errors)
+  }
+}
+
+pub fn parse_auth_input(value: Dynamic) -> Result(AuthInput, List(String)) {
+  case decode_auth_input(value) {
+    Error(_) -> Error(["invalid request body"])
+    Ok(input) -> validate_auth_input(input)
+  }
 }
 
 fn validate_create_reservation_input(input: CreateReservationInput) -> Result(CreateReservationInput, List(String)) {

@@ -5,6 +5,20 @@ import gleam/time/calendar
 import gleam/time/timestamp.{type Timestamp}
 import youid/uuid.{type Uuid}
 
+pub type Member {
+  Member(
+    id: Uuid,
+    email: String,
+  )
+}
+
+pub fn encode_member(value: Member) -> json.Json {
+  json.object([
+    #("id", json.string(uuid.to_string(value.id))),
+    #("email", json.string(value.email)),
+  ])
+}
+
 pub type Lesson {
   Lesson(
     id: Uuid,

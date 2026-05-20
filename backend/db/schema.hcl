@@ -43,6 +43,69 @@ table "lessons" {
   }
 }
 
+table "members" {
+  schema = schema.app
+
+  column "id" {
+    type = uuid
+    null = false
+  }
+  column "email" {
+    type = varchar(255)
+    null = false
+  }
+  column "password_hash" {
+    type = text
+    null = false
+  }
+  column "salt" {
+    type = text
+    null = false
+  }
+
+  primary_key {
+    columns = [column.id]
+  }
+
+  unique "members_email_key" {
+    columns = [column.email]
+  }
+}
+
+table "sessions" {
+  schema = schema.app
+
+  column "id" {
+    type = uuid
+    null = false
+  }
+  column "member_id" {
+    type = uuid
+    null = false
+  }
+  column "token" {
+    type = text
+    null = false
+  }
+  column "created_at" {
+    type = timestamp
+    null = false
+  }
+
+  primary_key {
+    columns = [column.id]
+  }
+
+  unique "sessions_token_key" {
+    columns = [column.token]
+  }
+
+  foreign_key "sessions_member_id_fkey" {
+    columns     = [column.member_id]
+    ref_columns = [table.members.column.id]
+  }
+}
+
 table "reservations" {
   schema = schema.app
 

@@ -4,6 +4,18 @@
  * Gym App API
  * OpenAPI spec version: 1.0.0
  */
+export interface AuthInput {
+  /** @minLength 1 */
+  email: string
+  /** @minLength 8 */
+  password: string
+}
+
+export interface Member {
+  id: string
+  email: string
+}
+
 export interface CreateReservationInput {
   lesson_id: string
 }
@@ -69,6 +81,106 @@ export type GetLessonsParams = {
    * 指定日のレッスンに絞り込む (YYYY-MM-DD)
    */
   date?: string
+}
+
+/**
+ * @summary 会員登録
+ */
+export type signupResponse201 = {
+  data: Member
+  status: 201
+}
+
+export type signupResponseSuccess = signupResponse201 & {
+  headers: Headers
+}
+
+export type signupResponse = signupResponseSuccess
+
+export const getSignupUrl = () => {
+  return `/api/auth/signup`
+}
+
+export const signup = async (
+  authInput: AuthInput,
+  options?: RequestInit,
+): Promise<signupResponse> => {
+  const res = await fetch(getSignupUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(authInput),
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: signupResponse["data"] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as signupResponse
+}
+
+/**
+ * @summary ログイン
+ */
+export type loginResponse200 = {
+  data: Member
+  status: 200
+}
+
+export type loginResponseSuccess = loginResponse200 & {
+  headers: Headers
+}
+
+export type loginResponse = loginResponseSuccess
+
+export const getLoginUrl = () => {
+  return `/api/auth/login`
+}
+
+export const login = async (
+  authInput: AuthInput,
+  options?: RequestInit,
+): Promise<loginResponse> => {
+  const res = await fetch(getLoginUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(authInput),
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: loginResponse["data"] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as loginResponse
+}
+
+/**
+ * @summary ログアウト
+ */
+export type logoutResponse204 = {
+  data: void
+  status: 204
+}
+
+export type logoutResponseSuccess = logoutResponse204 & {
+  headers: Headers
+}
+
+export type logoutResponse = logoutResponseSuccess
+
+export const getLogoutUrl = () => {
+  return `/api/auth/logout`
+}
+
+export const logout = async (options?: RequestInit): Promise<logoutResponse> => {
+  const res = await fetch(getLogoutUrl(), {
+    ...options,
+    method: "POST",
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: logoutResponse["data"] = body ? JSON.parse(body) : undefined
+  return { data, status: res.status, headers: res.headers } as logoutResponse
 }
 
 /**

@@ -4,6 +4,47 @@ info:
   version: "1.0.0"
 
 paths:
+  /auth/signup:
+    post:
+      summary: 会員登録
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "201":
+          description: 登録した会員
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+  /auth/login:
+    post:
+      summary: ログイン
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "200":
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+  /auth/logout:
+    post:
+      summary: ログアウト
+      operationId: logout
+      responses:
+        "204":
+          description: ログアウト完了
   /reservations:
     post:
       summary: 予約作成
@@ -61,6 +102,31 @@ paths:
 
 components:
   schemas:
+    AuthInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+
+    Member:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+
     CreateReservationInput:
       type: object
       required:
