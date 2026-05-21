@@ -10,6 +10,7 @@ export default defineConfig({
   theme: {
     tokens: {
       sizes: {
+        "0": { value: "0" },
         xs: { value: "4px" },
         sm: { value: "8px" },
         md: { value: "16px" },
@@ -26,6 +27,7 @@ export default defineConfig({
         full: { value: "100%" },
       },
       spacing: {
+        "0": { value: "0" },
         xs: { value: "4px" },
         sm: { value: "8px" },
         md: { value: "16px" },
