@@ -76,7 +76,8 @@ cd backend && mise run gen-sql           # SQL → Gleam コード生成
 
 ```
 backend/src/
-├── backend.gleam         # エントリーポイント。DB接続・ハンドラー初期化・サーバー起動
+├── backend.gleam         # エントリーポイント。DB接続・サーバー起動
+├── compose.gleam         # コンポジションルート。全フィーチャーの依存を組み立てる
 ├── app/
 │   ├── router.gleam      # path_segments でパターンマッチするルーティング
 │   ├── middleware.gleam  # ログ・CSRF 保護等
