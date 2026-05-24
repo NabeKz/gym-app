@@ -17,13 +17,18 @@ fn do_create(
   db: pog.Connection,
   info: command.ReservationInfo,
 ) -> Result(Reservation, String) {
-  db
-  |> sql.create_reservation(info.id, info.lesson_id, info.member_id)
-  |> result.map(fn(_) { Reservation(id: info.id, name: "") })
-  |> result.map_error(fn(err) {
-    wisp.log_error(string.inspect(err))
-    "Failed to save reservation"
-  })
+  use returned <- result.try(
+    db
+    |> sql.create_reservation(info.id, info.lesson_id, info.member_id)
+    |> result.map_error(fn(err) {
+      wisp.log_error(string.inspect(err))
+      "Failed to save reservation"
+    }),
+  )
+  case returned.rows {
+    [_] -> Ok(Reservation(id: info.id, name: ""))
+    _ -> Error("no remaining slots")
+  }
 }
 
 pub fn read_reservation_info(db: pog.Connection) -> command.ReadReservationInfo {
@@ -62,16 +67,3 @@ fn do_delete_reservation(db: pog.Connection, id: uuid.Uuid) -> Result(Nil, Strin
   })
 }
 
-pub fn increment_remaining_slots(db: pog.Connection) -> command.IncrementRemainingSlots {
-  do_increment_remaining_slots(db, _)
-}
-
-fn do_increment_remaining_slots(db: pog.Connection, lesson_id: uuid.Uuid) -> Result(Nil, String) {
-  db
-  |> sql.increment_remaining_slots(lesson_id)
-  |> result.map(fn(_) { Nil })
-  |> result.map_error(fn(err) {
-    wisp.log_error(string.inspect(err))
-    "Failed to increment remaining slots"
-  })
-}

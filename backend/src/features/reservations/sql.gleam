@@ -8,6 +8,16 @@ import gleam/dynamic/decode
 import pog
 import youid/uuid.{type Uuid}
 
+/// A row you get from running the `create_reservation` query
+/// defined in `./src/features/reservations/sql/create_reservation.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type CreateReservationRow {
+  CreateReservationRow(id: Uuid)
+}
+
 /// Runs the `create_reservation` query
 /// defined in `./src/features/reservations/sql/create_reservation.sql`.
 ///
@@ -19,22 +29,24 @@ pub fn create_reservation(
   arg_1: Uuid,
   arg_2: Uuid,
   arg_3: Uuid,
-) -> Result(pog.Returned(Nil), pog.QueryError) {
-  let decoder = decode.map(decode.dynamic, fn(_) { Nil })
+) -> Result(pog.Returned(CreateReservationRow), pog.QueryError) {
+  let decoder = {
+    use id <- decode.field(0, uuid_decoder())
+    decode.success(CreateReservationRow(id:))
+  }
 
-  "INSERT INTO
-    app.reservations
-    (
-      id,
-      lesson_id,
-      member_id
-    )
-VALUES
-    (
-        $1,
-        $2,
-        $3
-    );
+  "WITH capacity_check AS (
+  SELECT l.capacity - COUNT(r.id)::int AS remaining_slots
+  FROM app.lessons l
+  LEFT JOIN app.reservations r ON r.lesson_id = l.id
+  WHERE l.id = $2
+  GROUP BY l.capacity
+)
+INSERT INTO app.reservations (id, lesson_id, member_id)
+SELECT $1, $2, $3
+FROM capacity_check
+WHERE remaining_slots > 0
+RETURNING id;
 "
   |> pog.query
   |> pog.parameter(pog.text(uuid.to_string(arg_1)))
@@ -57,28 +69,6 @@ pub fn delete_reservation(
   let decoder = decode.map(decode.dynamic, fn(_) { Nil })
 
   "DELETE FROM app.reservations
-WHERE id = $1;
-"
-  |> pog.query
-  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
-  |> pog.returning(decoder)
-  |> pog.execute(db)
-}
-
-/// Runs the `increment_remaining_slots` query
-/// defined in `./src/features/reservations/sql/increment_remaining_slots.sql`.
-///
-/// > 🐿️ This function was generated automatically using v4.6.0 of
-/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
-///
-pub fn increment_remaining_slots(
-  db: pog.Connection,
-  arg_1: Uuid,
-) -> Result(pog.Returned(Nil), pog.QueryError) {
-  let decoder = decode.map(decode.dynamic, fn(_) { Nil })
-
-  "UPDATE app.lessons
-SET remaining_slots = remaining_slots + 1
 WHERE id = $1;
 "
   |> pog.query

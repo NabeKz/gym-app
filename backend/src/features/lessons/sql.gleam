@@ -23,7 +23,6 @@ pub type CreateLessonRow {
     starts_at: Timestamp,
     ends_at: Timestamp,
     capacity: Int,
-    remaining_slots: Int,
     description: String,
   )
 }
@@ -42,8 +41,7 @@ pub fn create_lesson(
   arg_4: Timestamp,
   arg_5: Timestamp,
   arg_6: Int,
-  arg_7: Int,
-  arg_8: String,
+  arg_7: String,
 ) -> Result(pog.Returned(CreateLessonRow), pog.QueryError) {
   let decoder = {
     use id <- decode.field(0, uuid_decoder())
@@ -52,8 +50,7 @@ pub fn create_lesson(
     use starts_at <- decode.field(3, pog.timestamp_decoder())
     use ends_at <- decode.field(4, pog.timestamp_decoder())
     use capacity <- decode.field(5, decode.int)
-    use remaining_slots <- decode.field(6, decode.int)
-    use description <- decode.field(7, decode.string)
+    use description <- decode.field(6, decode.string)
     decode.success(CreateLessonRow(
       id:,
       name:,
@@ -61,17 +58,16 @@ pub fn create_lesson(
       starts_at:,
       ends_at:,
       capacity:,
-      remaining_slots:,
       description:,
     ))
   }
 
   "INSERT INTO app.lessons
-  (id, name, instructor, starts_at, ends_at, capacity, remaining_slots, description)
+  (id, name, instructor, starts_at, ends_at, capacity, description)
 VALUES
-  ($1, $2, $3, $4, $5, $6, $7, $8)
+  ($1, $2, $3, $4, $5, $6, $7)
 RETURNING
-  id, name, instructor, starts_at, ends_at, capacity, remaining_slots, description
+  id, name, instructor, starts_at, ends_at, capacity, description
 "
   |> pog.query
   |> pog.parameter(pog.text(uuid.to_string(arg_1)))
@@ -80,30 +76,7 @@ RETURNING
   |> pog.parameter(pog.timestamp(arg_4))
   |> pog.parameter(pog.timestamp(arg_5))
   |> pog.parameter(pog.int(arg_6))
-  |> pog.parameter(pog.int(arg_7))
-  |> pog.parameter(pog.text(arg_8))
-  |> pog.returning(decoder)
-  |> pog.execute(db)
-}
-
-/// Runs the `decrement_remaining_slots` query
-/// defined in `./src/features/lessons/sql/decrement_remaining_slots.sql`.
-///
-/// > 🐿️ This function was generated automatically using v4.6.0 of
-/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
-///
-pub fn decrement_remaining_slots(
-  db: pog.Connection,
-  arg_1: Uuid,
-) -> Result(pog.Returned(Nil), pog.QueryError) {
-  let decoder = decode.map(decode.dynamic, fn(_) { Nil })
-
-  "UPDATE app.lessons
-SET remaining_slots = remaining_slots - 1
-WHERE id = $1 AND remaining_slots > 0;
-"
-  |> pog.query
-  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.parameter(pog.text(arg_7))
   |> pog.returning(decoder)
   |> pog.execute(db)
 }
@@ -157,7 +130,18 @@ pub fn list_lesson(
     ))
   }
 
-  "SELECT id, name, instructor, starts_at, ends_at, capacity, remaining_slots, description FROM app.lessons
+  "SELECT
+  l.id,
+  l.name,
+  l.instructor,
+  l.starts_at,
+  l.ends_at,
+  l.capacity,
+  l.capacity - COUNT(r.id)::int AS remaining_slots,
+  l.description
+FROM app.lessons l
+LEFT JOIN app.reservations r ON r.lesson_id = l.id
+GROUP BY l.id
 "
   |> pog.query
   |> pog.returning(decoder)
@@ -215,18 +199,18 @@ pub fn read_lesson(
   }
 
   "SELECT
-    id,
-    name,
-    instructor,
-    starts_at,
-    ends_at,
-    capacity,
-    remaining_slots,
-    description
-FROM
-    app.lessons
-WHERE
-    id = $1
+  l.id,
+  l.name,
+  l.instructor,
+  l.starts_at,
+  l.ends_at,
+  l.capacity,
+  l.capacity - COUNT(r.id)::int AS remaining_slots,
+  l.description
+FROM app.lessons l
+LEFT JOIN app.reservations r ON r.lesson_id = l.id
+WHERE l.id = $1
+GROUP BY l.id
 "
   |> pog.query
   |> pog.parameter(pog.text(uuid.to_string(arg_1)))

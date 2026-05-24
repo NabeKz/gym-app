@@ -20,7 +20,6 @@ fn do_create(db: pog.Connection, lesson: Lesson) -> Result(Lesson, String) {
     lesson.starts_at,
     lesson.ends_at,
     lesson.capacity,
-    lesson.remaining_slots,
     lesson.description,
   )
   |> result.map(fn(_) { lesson })
@@ -91,16 +90,3 @@ pub fn list(db: pog.Connection) -> query.ListAdaptor {
   do_list(db, _)
 }
 
-pub fn decrement_remaining_slots(db: pog.Connection) -> command.DecrementRemainingSlots {
-  do_decrement_remaining_slots(db, _)
-}
-
-fn do_decrement_remaining_slots(db: pog.Connection, lesson_id: uuid.Uuid) -> Result(Nil, String) {
-  db
-  |> sql.decrement_remaining_slots(lesson_id)
-  |> result.map(fn(_) { Nil })
-  |> result.map_error(fn(err) {
-    wisp.log_error(string.inspect(err))
-    "Failed to decrement remaining slots"
-  })
-}

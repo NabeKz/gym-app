@@ -7,9 +7,6 @@ import generated/responses.{type Lesson, Lesson}
 pub type SaveLesson =
   fn(Lesson) -> Result(Lesson, String)
 
-pub type DecrementRemainingSlots =
-  fn(uuid.Uuid) -> Result(Nil, String)
-
 pub type CreateLesson =
   fn(requests.CreateLessonInput) -> Result(Lesson, String)
 

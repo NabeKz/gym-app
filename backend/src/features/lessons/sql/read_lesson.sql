@@ -1,13 +1,13 @@
 SELECT
-    id,
-    name,
-    instructor,
-    starts_at,
-    ends_at,
-    capacity,
-    remaining_slots,
-    description
-FROM
-    app.lessons
-WHERE
-    id = $1
+  l.id,
+  l.name,
+  l.instructor,
+  l.starts_at,
+  l.ends_at,
+  l.capacity,
+  l.capacity - COUNT(r.id)::int AS remaining_slots,
+  l.description
+FROM app.lessons l
+LEFT JOIN app.reservations r ON r.lesson_id = l.id
+WHERE l.id = $1
+GROUP BY l.id

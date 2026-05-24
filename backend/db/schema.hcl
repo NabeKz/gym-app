@@ -29,10 +29,6 @@ table "lessons" {
     type = int
     null = false
   }
-  column "remaining_slots" {
-    type = int
-    null = false
-  }
   column "description" {
     type = text
     null = false

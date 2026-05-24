@@ -32,9 +32,7 @@ pub fn cancel_success_test() {
   let read_reservation = fn(_: uuid.Uuid) { Ok(reservation) }
   let delete_reservation = fn(_: uuid.Uuid) { Ok(Nil) }
   let read_lesson = fn(_: uuid.Uuid) { Ok(fixture_lesson(lesson_id, starts_at)) }
-  let increment_slots = fn(_: uuid.Uuid) { Ok(Nil) }
-
-  command.cancel(read_reservation, delete_reservation, read_lesson, increment_slots)(
+  command.cancel(read_reservation, delete_reservation, read_lesson)(
     command.CancelInput(reservation_id:, member_id:, now:),
   )
   |> should.equal(Ok(Nil))
@@ -54,9 +52,7 @@ pub fn cancel_not_own_reservation_test() {
   let read_reservation = fn(_: uuid.Uuid) { Ok(reservation) }
   let delete_reservation = fn(_: uuid.Uuid) { Ok(Nil) }
   let read_lesson = fn(_: uuid.Uuid) { Ok(fixture_lesson(lesson_id, starts_at)) }
-  let increment_slots = fn(_: uuid.Uuid) { Ok(Nil) }
-
-  command.cancel(read_reservation, delete_reservation, read_lesson, increment_slots)(
+  command.cancel(read_reservation, delete_reservation, read_lesson)(
     command.CancelInput(reservation_id:, member_id:, now:),
   )
   |> should.be_error
@@ -69,9 +65,7 @@ pub fn cancel_not_found_test() {
   let read_reservation = fn(_: uuid.Uuid) { Error("not found") }
   let delete_reservation = fn(_: uuid.Uuid) { Ok(Nil) }
   let read_lesson = fn(_: uuid.Uuid) { Error("not found") }
-  let increment_slots = fn(_: uuid.Uuid) { Ok(Nil) }
-
-  command.cancel(read_reservation, delete_reservation, read_lesson, increment_slots)(
+  command.cancel(read_reservation, delete_reservation, read_lesson)(
     command.CancelInput(reservation_id: uuid.v4(), member_id: uuid.v4(), now:),
   )
   |> should.be_error
@@ -89,9 +83,7 @@ pub fn cancel_after_lesson_starts_test() {
   let read_reservation = fn(_: uuid.Uuid) { Ok(reservation) }
   let delete_reservation = fn(_: uuid.Uuid) { Ok(Nil) }
   let read_lesson = fn(_: uuid.Uuid) { Ok(fixture_lesson(lesson_id, starts_at)) }
-  let increment_slots = fn(_: uuid.Uuid) { Ok(Nil) }
-
-  command.cancel(read_reservation, delete_reservation, read_lesson, increment_slots)(
+  command.cancel(read_reservation, delete_reservation, read_lesson)(
     command.CancelInput(reservation_id:, member_id:, now:),
   )
   |> should.be_error
