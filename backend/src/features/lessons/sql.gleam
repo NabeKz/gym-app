@@ -95,7 +95,7 @@ pub type ListLessonRow {
     starts_at: Timestamp,
     ends_at: Timestamp,
     capacity: Int,
-    remaining_slots: Int,
+    reserved_count: Int,
     description: String,
   )
 }
@@ -116,7 +116,7 @@ pub fn list_lesson(
     use starts_at <- decode.field(3, pog.timestamp_decoder())
     use ends_at <- decode.field(4, pog.timestamp_decoder())
     use capacity <- decode.field(5, decode.int)
-    use remaining_slots <- decode.field(6, decode.int)
+    use reserved_count <- decode.field(6, decode.int)
     use description <- decode.field(7, decode.string)
     decode.success(ListLessonRow(
       id:,
@@ -125,7 +125,7 @@ pub fn list_lesson(
       starts_at:,
       ends_at:,
       capacity:,
-      remaining_slots:,
+      reserved_count:,
       description:,
     ))
   }
@@ -137,7 +137,7 @@ pub fn list_lesson(
   l.starts_at,
   l.ends_at,
   l.capacity,
-  l.capacity - COUNT(r.id)::int AS remaining_slots,
+  COUNT(r.id)::int AS reserved_count,
   l.description
 FROM app.lessons l
 LEFT JOIN app.reservations r ON r.lesson_id = l.id
@@ -162,7 +162,7 @@ pub type ReadLessonRow {
     starts_at: Timestamp,
     ends_at: Timestamp,
     capacity: Int,
-    remaining_slots: Int,
+    reserved_count: Int,
     description: String,
   )
 }
@@ -184,7 +184,7 @@ pub fn read_lesson(
     use starts_at <- decode.field(3, pog.timestamp_decoder())
     use ends_at <- decode.field(4, pog.timestamp_decoder())
     use capacity <- decode.field(5, decode.int)
-    use remaining_slots <- decode.field(6, decode.int)
+    use reserved_count <- decode.field(6, decode.int)
     use description <- decode.field(7, decode.string)
     decode.success(ReadLessonRow(
       id:,
@@ -193,7 +193,7 @@ pub fn read_lesson(
       starts_at:,
       ends_at:,
       capacity:,
-      remaining_slots:,
+      reserved_count:,
       description:,
     ))
   }
@@ -205,7 +205,7 @@ pub fn read_lesson(
   l.starts_at,
   l.ends_at,
   l.capacity,
-  l.capacity - COUNT(r.id)::int AS remaining_slots,
+  COUNT(r.id)::int AS reserved_count,
   l.description
 FROM app.lessons l
 LEFT JOIN app.reservations r ON r.lesson_id = l.id

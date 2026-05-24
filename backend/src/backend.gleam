@@ -54,7 +54,7 @@ pub fn main() {
         reservations_app.cancel(
           reservations_rdb.read_reservation_info(conn),
           reservations_rdb.delete_reservation(conn),
-          lessons_rdb.read(conn),
+          conn |> lessons_rdb.read |> lessons_app.read,
         ),
       ),
     )

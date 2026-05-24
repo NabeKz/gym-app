@@ -7,9 +7,9 @@ import wisp
 import youid/uuid
 
 import features/lessons/application/command
-import features/lessons/application/query
+import features/lessons/application/query.{type LessonRow, LessonRow}
 import features/lessons/sql
-import generated/responses.{type Lesson, Lesson}
+import generated/responses.{type Lesson}
 
 fn do_create(db: pog.Connection, lesson: Lesson) -> Result(Lesson, String) {
   db
@@ -33,7 +33,7 @@ pub fn create(db: pog.Connection) -> command.SaveLesson {
   do_create(db, _)
 }
 
-fn do_read(db: pog.Connection, id: uuid.Uuid) {
+fn do_read(db: pog.Connection, id: uuid.Uuid) -> Result(LessonRow, String) {
   use returned <- result.try(
     db
     |> sql.read_lesson(id)
@@ -46,36 +46,36 @@ fn do_read(db: pog.Connection, id: uuid.Uuid) {
     |> result.map_error(fn(_) { "not unique" }),
   )
 
-  Lesson(
+  LessonRow(
     id: row.id,
     name: row.name,
     instructor: row.instructor,
     starts_at: row.starts_at,
     ends_at: row.ends_at,
     capacity: row.capacity,
-    remaining_slots: row.remaining_slots,
+    reserved_count: row.reserved_count,
     description: row.description,
   )
   |> Ok()
 }
 
-pub fn read(db: pog.Connection) -> application.ReadLesson {
+pub fn read(db: pog.Connection) -> application.ReadAdaptor {
   do_read(db, _)
 }
 
-fn do_list(db: pog.Connection, _input: Nil) -> Result(List(Lesson), String) {
+fn do_list(db: pog.Connection, _input: Nil) -> Result(List(LessonRow), String) {
   db
   |> sql.list_lesson()
   |> result.map(fn(r) {
     list.map(r.rows, fn(row) {
-      Lesson(
+      LessonRow(
         id: row.id,
         name: row.name,
         instructor: row.instructor,
         starts_at: row.starts_at,
         ends_at: row.ends_at,
         capacity: row.capacity,
-        remaining_slots: row.remaining_slots,
+        reserved_count: row.reserved_count,
         description: row.description,
       )
     })

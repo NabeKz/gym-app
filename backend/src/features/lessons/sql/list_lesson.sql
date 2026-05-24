@@ -5,7 +5,7 @@ SELECT
   l.starts_at,
   l.ends_at,
   l.capacity,
-  l.capacity - COUNT(r.id)::int AS remaining_slots,
+  COUNT(r.id)::int AS reserved_count,
   l.description
 FROM app.lessons l
 LEFT JOIN app.reservations r ON r.lesson_id = l.id
