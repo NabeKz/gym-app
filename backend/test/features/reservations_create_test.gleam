@@ -11,8 +11,9 @@ pub fn create_reservation_success_test() {
   let member_id = uuid.v4()
   let input = CreateReservationInput(lesson_id:)
   let save = fn(_: command.ReservationInfo) { Ok(Reservation(id: uuid.v4(), name: "")) }
+  let decrement = fn(_) { Ok(Nil) }
 
-  let assert Ok(reservation) = command.create(save)(member_id, input)
+  let assert Ok(reservation) = command.create(save, decrement)(member_id, input)
 
   // id は lesson_id とは別の新しい UUID であること
   reservation.id |> should.not_equal(lesson_id)
@@ -21,6 +22,7 @@ pub fn create_reservation_success_test() {
 pub fn create_reservation_adaptor_error_test() {
   let input = CreateReservationInput(lesson_id: uuid.v4())
   let save = fn(_: command.ReservationInfo) { Error("db error") }
+  let decrement = fn(_) { Ok(Nil) }
 
-  command.create(save)(uuid.v4(), input) |> should.be_error
+  command.create(save, decrement)(uuid.v4(), input) |> should.be_error
 }

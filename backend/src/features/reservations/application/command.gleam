@@ -9,20 +9,29 @@ import generated/responses.{type Lesson, type Reservation}
 pub type SaveReservation =
   fn(ReservationInfo) -> Result(Reservation, String)
 
+pub type DecrementRemainingSlots =
+  fn(uuid.Uuid) -> Result(Nil, String)
+
 pub type CreateReservation =
   fn(uuid.Uuid, requests.CreateReservationInput) -> Result(Reservation, String)
 
-pub fn create(adaptor: SaveReservation) -> CreateReservation {
-  fn(member_id, input) { do_create(adaptor, member_id, input) }
+pub fn create(
+  save: SaveReservation,
+  decrement_slots: DecrementRemainingSlots,
+) -> CreateReservation {
+  fn(member_id, input) { do_create(save, decrement_slots, member_id, input) }
 }
 
 fn do_create(
-  adaptor: SaveReservation,
+  save: SaveReservation,
+  decrement_slots: DecrementRemainingSlots,
   member_id: uuid.Uuid,
   input: requests.CreateReservationInput,
 ) -> Result(Reservation, String) {
-  ReservationInfo(id: uuid.v4(), lesson_id: input.lesson_id, member_id:)
-  |> adaptor()
+  let info = ReservationInfo(id: uuid.v4(), lesson_id: input.lesson_id, member_id:)
+  use reservation <- result.try(save(info))
+  use _ <- result.try(decrement_slots(input.lesson_id))
+  Ok(reservation)
 }
 
 pub type ReservationInfo {

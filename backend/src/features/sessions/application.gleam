@@ -15,6 +15,9 @@ pub type SaveSession =
 pub type DeleteSession =
   command.DeleteSession
 
+pub type FindMemberIdByToken =
+  command.FindMemberIdByToken
+
 pub const login = command.login
 
 pub const logout = command.logout

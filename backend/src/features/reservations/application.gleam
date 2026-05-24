@@ -6,6 +6,9 @@ pub type CreateReservation =
 pub type SaveReservation =
   command.SaveReservation
 
+pub type DecrementRemainingSlots =
+  command.DecrementRemainingSlots
+
 pub type Cancel =
   command.Cancel
 

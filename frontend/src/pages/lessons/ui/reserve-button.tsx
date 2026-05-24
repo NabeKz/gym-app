@@ -6,7 +6,13 @@ import type { Lesson } from "@/shared/generated/openapi.gen"
 
 type ReserveState = "idle" | "pending" | "success" | "error"
 
-export const ReserveButton = ({ lesson }: { lesson: Lesson }) => {
+export const ReserveButton = ({
+  lesson,
+  onReserved,
+}: {
+  lesson: Lesson
+  onReserved: () => void
+}) => {
   const [isPending, startTransition] = useTransition()
   const [state, setState] = useState<ReserveState>("idle")
 
@@ -18,6 +24,7 @@ export const ReserveButton = ({ lesson }: { lesson: Lesson }) => {
       try {
         await createReservation({ lesson_id: lesson.id })
         setState("success")
+        onReserved()
       } catch {
         setState("error")
       }

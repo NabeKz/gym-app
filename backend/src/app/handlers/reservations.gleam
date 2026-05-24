@@ -1,12 +1,13 @@
-import gleam/http/request
 import gleam/http/response
 import gleam/json
 import wisp.{type Request, type Response}
 import youid/uuid
 
+import app/handlers/auth
 import app/handlers/request as req_helper
 import features/reservations/application
 import features/reservations/application/command
+import features/sessions/application as sessions_app
 import generated/requests
 import generated/responses
 import shared/date
@@ -18,8 +19,12 @@ pub type ReservationHandler {
   )
 }
 
-fn create(create_fn: application.CreateReservation, req: Request) -> Response {
-  use member_id <- require_member_id(req)
+fn create(
+  find_session: sessions_app.FindMemberIdByToken,
+  create_fn: application.CreateReservation,
+  req: Request,
+) -> Response {
+  use member_id <- require_member_id(find_session, req)
   use input <- req_helper.require_json_body(req, requests.parse_create_reservation_input)
   case create_fn(member_id, input) {
     Ok(reservation) ->
@@ -31,8 +36,13 @@ fn create(create_fn: application.CreateReservation, req: Request) -> Response {
   }
 }
 
-fn cancel(cancel_fn: application.Cancel, req: Request, id: String) -> Response {
-  use member_id <- require_member_id(req)
+fn cancel(
+  find_session: sessions_app.FindMemberIdByToken,
+  cancel_fn: application.Cancel,
+  req: Request,
+  id: String,
+) -> Response {
+  use member_id <- require_member_id(find_session, req)
   use reservation_id <- require_uuid(id)
   case cancel_fn(command.CancelInput(reservation_id:, member_id:, now: date.now())) {
     Ok(_) -> wisp.response(204)
@@ -43,13 +53,17 @@ fn cancel(cancel_fn: application.Cancel, req: Request, id: String) -> Response {
   }
 }
 
-fn require_member_id(req: Request, next: fn(uuid.Uuid) -> Response) -> Response {
-  case request.get_header(req, "x-member-id") {
+fn require_member_id(
+  find_session: sessions_app.FindMemberIdByToken,
+  req: Request,
+  next: fn(uuid.Uuid) -> Response,
+) -> Response {
+  case wisp.get_cookie(req, auth.session_cookie, wisp.Signed) {
     Error(_) -> unauthorized()
-    Ok(raw) ->
-      case uuid.from_string(raw) {
+    Ok(token) ->
+      case find_session(token) {
         Error(_) -> unauthorized()
-        Ok(id) -> next(id)
+        Ok(member_id) -> next(member_id)
       }
   }
 }
@@ -73,11 +87,12 @@ fn unauthorized() -> Response {
 }
 
 pub fn new(
+  find_session: sessions_app.FindMemberIdByToken,
   create_fn: application.CreateReservation,
   cancel_fn: application.Cancel,
 ) -> ReservationHandler {
   ReservationHandler(
-    create: create(create_fn, _),
-    cancel: fn(req, id) { cancel(cancel_fn, req, id) },
+    create: create(find_session, create_fn, _),
+    cancel: fn(req, id) { cancel(find_session, cancel_fn, req, id) },
   )
 }

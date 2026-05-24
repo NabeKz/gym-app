@@ -1,5 +1,6 @@
 import features/sessions/application/command
 import features/sessions/sql
+import gleam/list
 import gleam/result
 import gleam/string
 import gleam/time/timestamp
@@ -44,4 +45,23 @@ fn do_delete_session(
 
 pub fn delete_session(db: pog.Connection) -> command.DeleteSession {
   do_delete_session(db, _)
+}
+
+pub fn find_member_id_by_token(db: pog.Connection) -> command.FindMemberIdByToken {
+  do_find_member_id_by_token(db, _)
+}
+
+fn do_find_member_id_by_token(db: pog.Connection, token: String) -> Result(uuid.Uuid, String) {
+  use returned <- result.try(
+    db
+    |> sql.find_session_by_token(token)
+    |> result.map_error(fn(err) {
+      wisp.log_error(string.inspect(err))
+      "Failed to find session"
+    }),
+  )
+  returned.rows
+  |> list.first()
+  |> result.map(fn(row) { row.member_id })
+  |> result.map_error(fn(_) { "session not found" })
 }

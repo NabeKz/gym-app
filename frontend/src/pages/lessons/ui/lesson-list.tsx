@@ -7,7 +7,7 @@ import { parseDate, formatDateTime, formatTime } from "@/shared/lib/date"
 import { ReserveButton } from "./reserve-button"
 import { emptyText } from "@/shared/ui/styles"
 
-const LessonCard = ({ lesson }: { lesson: Lesson }) => {
+const LessonCard = ({ lesson, onReserved }: { lesson: Lesson; onReserved: () => void }) => {
   const startsAt = parseDate(lesson.startsAt)
   const endsAt = parseDate(lesson.endsAt)
 
@@ -34,13 +34,19 @@ const LessonCard = ({ lesson }: { lesson: Lesson }) => {
       {lesson.description && <p className={descText}>{lesson.description}</p>}
 
       <div className={hstack({ justify: "flex-end" })}>
-        <ReserveButton lesson={lesson} />
+        <ReserveButton lesson={lesson} onReserved={onReserved} />
       </div>
     </div>
   )
 }
 
-export const LessonList = ({ promise }: { promise: ReturnType<typeof getLessons> }) => {
+export const LessonList = ({
+  promise,
+  onReserved,
+}: {
+  promise: ReturnType<typeof getLessons>
+  onReserved: () => void
+}) => {
   const { data: items } = use(promise)
 
   if (items.length === 0) {
@@ -50,7 +56,7 @@ export const LessonList = ({ promise }: { promise: ReturnType<typeof getLessons>
   return (
     <div className={vstack({ gap: "md", alignItems: "stretch", w: "full" })}>
       {items.map((item) => (
-        <LessonCard key={item.id} lesson={item} />
+        <LessonCard key={item.id} lesson={item} onReserved={onReserved} />
       ))}
     </div>
   )

@@ -86,6 +86,28 @@ RETURNING
   |> pog.execute(db)
 }
 
+/// Runs the `decrement_remaining_slots` query
+/// defined in `./src/features/lessons/sql/decrement_remaining_slots.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn decrement_remaining_slots(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(Nil), pog.QueryError) {
+  let decoder = decode.map(decode.dynamic, fn(_) { Nil })
+
+  "UPDATE app.lessons
+SET remaining_slots = remaining_slots - 1
+WHERE id = $1 AND remaining_slots > 0;
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
 /// A row you get from running the `list_lesson` query
 /// defined in `./src/features/lessons/sql/list_lesson.sql`.
 ///

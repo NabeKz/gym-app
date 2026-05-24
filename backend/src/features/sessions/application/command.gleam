@@ -15,6 +15,9 @@ pub type SaveSession =
 pub type DeleteSession =
   fn(String) -> Result(Nil, String)
 
+pub type FindMemberIdByToken =
+  fn(String) -> Result(uuid.Uuid, String)
+
 pub type Login =
   fn(AuthInput) -> Result(#(Member, String), String)
 

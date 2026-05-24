@@ -6,7 +6,7 @@ import generated/requests
 import generated/responses
 import wisp.{type Request, type Response}
 
-const session_cookie = "session_token"
+pub const session_cookie = "session_token"
 
 const session_max_age = 86_400
 
