@@ -8,6 +8,8 @@ import gleam/time/timestamp.{type Timestamp}
 import pog
 import youid/uuid.{type Uuid}
 
+import workflows/adaptor/rdb as rdb_adaptor
+import workflows/create_reservation
 import workflows/lesson_reservation_actor
 import workflows/lesson_reservation_registry
 
@@ -31,11 +33,18 @@ pub fn start(
   use registry_started <- result.try(lesson_reservation_registry.start())
   let registry = registry_started.data
 
+  let reserve =
+    create_reservation.create(
+      rdb_adaptor.get_lesson(conn),
+      rdb_adaptor.has_reservation(conn),
+      rdb_adaptor.save_reservation(conn),
+    )
+
   let template = fn(args: ActorArgs) {
     let on_shutdown = fn(lesson_id) {
       lesson_reservation_registry.deregister(registry, lesson_id)
     }
-    lesson_reservation_actor.start(args.lesson_id, args.starts_at, conn, on_shutdown)
+    lesson_reservation_actor.start(args.lesson_id, args.starts_at, reserve, on_shutdown)
   }
 
   use factory_started <- result.try(
