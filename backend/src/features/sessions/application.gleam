@@ -18,6 +18,14 @@ pub type DeleteSession =
 pub type FindMemberIdByToken =
   command.FindMemberIdByToken
 
+pub type FindMemberById =
+  command.FindMemberById
+
+pub type Me =
+  command.Me
+
 pub const login = command.login
 
 pub const logout = command.logout
+
+pub const me = command.me

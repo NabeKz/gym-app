@@ -126,4 +126,9 @@ table "reservations" {
     columns     = [column.lesson_id]
     ref_columns = [table.lessons.column.id]
   }
+
+  foreign_key "reservations_member_id_fkey" {
+    columns     = [column.member_id]
+    ref_columns = [table.members.column.id]
+  }
 }

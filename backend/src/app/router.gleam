@@ -37,6 +37,7 @@ pub fn auth_routes(
     ["signup"], http.Post -> req |> h.signup()
     ["login"], http.Post -> req |> h.login()
     ["logout"], http.Post -> req |> h.logout()
+    ["me"], http.Get -> req |> h.me()
     _, _ -> wisp.not_found()
   }
 }

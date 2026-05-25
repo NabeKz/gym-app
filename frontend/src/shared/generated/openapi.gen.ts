@@ -184,6 +184,44 @@ export const logout = async (options?: RequestInit): Promise<logoutResponse> => 
 }
 
 /**
+ * @summary 現在のログインユーザー取得
+ */
+export type getMeResponse200 = {
+  data: Member
+  status: 200
+}
+
+export type getMeResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getMeResponseSuccess = getMeResponse200 & {
+  headers: Headers
+}
+export type getMeResponseError = getMeResponse401 & {
+  headers: Headers
+}
+
+export type getMeResponse = getMeResponseSuccess | getMeResponseError
+
+export const getGetMeUrl = () => {
+  return `/api/auth/me`
+}
+
+export const getMe = async (options?: RequestInit): Promise<getMeResponse> => {
+  const res = await fetch(getGetMeUrl(), {
+    ...options,
+    method: "GET",
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: getMeResponse["data"] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getMeResponse
+}
+
+/**
  * @summary 予約作成
  */
 export type createReservationResponse200 = {

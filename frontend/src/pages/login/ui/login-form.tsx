@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router"
 import { css } from "styled-system/css"
 import { grid, vstack } from "styled-system/patterns"
 import { login } from "@/shared/generated/openapi.gen"
-import { storeMember } from "@/shared/lib/auth"
 
 export const LoginForm = () => {
   const navigate = useNavigate()
@@ -23,7 +22,6 @@ export const LoginForm = () => {
         setError(true)
         return
       }
-      storeMember(res.data)
       navigate({ to: "/" })
     })
   }

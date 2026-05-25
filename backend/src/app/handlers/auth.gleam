@@ -15,6 +15,7 @@ pub type AuthHandler {
     signup: fn(Request) -> Response,
     login: fn(Request) -> Response,
     logout: fn(Request) -> Response,
+    me: fn(Request) -> Response,
   )
 }
 
@@ -54,14 +55,30 @@ fn logout(logout_fn: sessions_app.Logout, req: Request) -> Response {
   }
 }
 
+fn me(me_fn: sessions_app.Me, req: Request) -> Response {
+  case wisp.get_cookie(req, session_cookie, wisp.Signed) {
+    Ok(token) ->
+      case me_fn(token) {
+        Ok(member) ->
+          member
+          |> responses.encode_member
+          |> response.json_response(200)
+        Error(_) -> wisp.response(401)
+      }
+    Error(_) -> wisp.response(401)
+  }
+}
+
 pub fn new(
   signup_fn: members_app.SignUp,
   login_fn: sessions_app.Login,
   logout_fn: sessions_app.Logout,
+  me_fn: sessions_app.Me,
 ) -> AuthHandler {
   AuthHandler(
     signup: signup(signup_fn, _),
     login: login(login_fn, _),
     logout: logout(logout_fn, _),
+    me: me(me_fn, _),
   )
 }

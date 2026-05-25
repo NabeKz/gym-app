@@ -11,6 +11,9 @@ pub type SaveMember =
 pub type FindMemberByEmail =
   fn(String) -> Result(MemberRecord, String)
 
+pub type FindMemberById =
+  fn(uuid.Uuid) -> Result(MemberRecord, String)
+
 pub type SignUp =
   fn(AuthInput) -> Result(Member, String)
 

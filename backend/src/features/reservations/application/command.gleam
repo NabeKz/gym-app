@@ -21,16 +21,16 @@ fn do_create(
   member_id: uuid.Uuid,
   input: requests.CreateReservationInput,
 ) -> Result(Reservation, String) {
-  let info = ReservationInfo(id: uuid.v4(), lesson_id: input.lesson_id, member_id:)
-  save(info)
+  ReservationInfo(
+    id: uuid.v4(),
+    lesson_id: input.lesson_id,
+    member_id: member_id,
+  )
+  |> save
 }
 
 pub type ReservationInfo {
-  ReservationInfo(
-    id: uuid.Uuid,
-    lesson_id: uuid.Uuid,
-    member_id: uuid.Uuid,
-  )
+  ReservationInfo(id: uuid.Uuid, lesson_id: uuid.Uuid, member_id: uuid.Uuid)
 }
 
 pub type ReadReservationInfo =
@@ -61,14 +61,20 @@ pub fn cancel(
   do_cancel(read_reservation, delete_reservation, read_lesson, _)
 }
 
-fn check_ownership(reservation: ReservationInfo, member_id: uuid.Uuid) -> Result(Nil, String) {
+fn check_ownership(
+  reservation: ReservationInfo,
+  member_id: uuid.Uuid,
+) -> Result(Nil, String) {
   case reservation.member_id == member_id {
     True -> Ok(Nil)
     False -> Error("not your reservation")
   }
 }
 
-fn check_not_started(now: timestamp.Timestamp, lesson: Lesson) -> Result(Nil, String) {
+fn check_not_started(
+  now: timestamp.Timestamp,
+  lesson: Lesson,
+) -> Result(Nil, String) {
   case timestamp.compare(now, lesson.starts_at) {
     order.Lt -> Ok(Nil)
     _ -> Error("lesson has already started")

@@ -95,6 +95,49 @@ WHERE email = $1
   |> pog.execute(db)
 }
 
+/// A row you get from running the `find_member_by_id` query
+/// defined in `./src/features/members/sql/find_member_by_id.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type FindMemberByIdRow {
+  FindMemberByIdRow(
+    id: Uuid,
+    email: String,
+    password_hash: String,
+    salt: String,
+  )
+}
+
+/// Runs the `find_member_by_id` query
+/// defined in `./src/features/members/sql/find_member_by_id.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn find_member_by_id(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(FindMemberByIdRow), pog.QueryError) {
+  let decoder = {
+    use id <- decode.field(0, uuid_decoder())
+    use email <- decode.field(1, decode.string)
+    use password_hash <- decode.field(2, decode.string)
+    use salt <- decode.field(3, decode.string)
+    decode.success(FindMemberByIdRow(id:, email:, password_hash:, salt:))
+  }
+
+  "SELECT id, email, password_hash, salt
+FROM app.members
+WHERE id = $1
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
 // --- Encoding/decoding utils -------------------------------------------------
 
 /// A decoder to decode `Uuid`s coming from a Postgres query.

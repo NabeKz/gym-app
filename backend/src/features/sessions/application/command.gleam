@@ -18,11 +18,17 @@ pub type DeleteSession =
 pub type FindMemberIdByToken =
   fn(String) -> Result(uuid.Uuid, String)
 
+pub type FindMemberById =
+  fn(uuid.Uuid) -> Result(MemberRecord, String)
+
 pub type Login =
   fn(AuthInput) -> Result(#(Member, String), String)
 
 pub type Logout =
   fn(String) -> Result(Nil, String)
+
+pub type Me =
+  fn(String) -> Result(Member, String)
 
 pub fn login(
   find_member: FindMemberByEmail,
@@ -57,4 +63,15 @@ fn do_login(
 
 pub fn logout(delete_session: DeleteSession) -> Logout {
   delete_session
+}
+
+pub fn me(
+  find_member_id: FindMemberIdByToken,
+  find_member: FindMemberById,
+) -> Me {
+  fn(token) {
+    use member_id <- result.try(find_member_id(token))
+    use record <- result.try(find_member(member_id))
+    Ok(Member(id: record.id, email: record.email))
+  }
 }

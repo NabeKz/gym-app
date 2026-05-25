@@ -18,9 +18,10 @@ erDiagram
     app_reservations["app.reservations"] {
       uuid id PK
       uuid lesson_id FK
-      uuid member_id
+      uuid member_id FK
     }
     app_reservations }o--o| app_lessons : reservations_lesson_id_fkey
+    app_reservations }o--o| app_members : reservations_member_id_fkey
     app_sessions["app.sessions"] {
       uuid id PK
       uuid member_id FK

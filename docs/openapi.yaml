@@ -45,6 +45,19 @@ paths:
       responses:
         "204":
           description: ログアウト完了
+  /auth/me:
+    get:
+      summary: 現在のログインユーザー取得
+      operationId: getMe
+      responses:
+        "200":
+          description: ログイン中の会員
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "401":
+          description: 未認証
   /reservations:
     post:
       summary: 予約作成

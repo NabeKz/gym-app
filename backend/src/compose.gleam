@@ -27,6 +27,10 @@ pub fn build(conn: pog.Connection, pepper: String) -> handlers.Handlers {
         pepper,
       ),
       sessions_app.logout(sessions_rdb.delete_session(conn)),
+      sessions_app.me(
+        sessions_rdb.find_member_id_by_token(conn),
+        members_rdb.find_by_id(conn),
+      ),
     ),
     lessons: lessons.new(
       conn |> lessons_rdb.create |> lessons_app.create,
