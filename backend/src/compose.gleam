@@ -1,3 +1,4 @@
+import gleam/result
 import pog
 
 import app/handlers
@@ -12,9 +13,20 @@ import features/reservations/adaptor/rdb as reservations_rdb
 import features/reservations/application as reservations_app
 import features/sessions/adaptor/rdb as sessions_rdb
 import features/sessions/application as sessions_app
-import workflows/adaptor/rdb as workflows_rdb
+import workflows/adaptor/actor as actor_adaptor
+import workflows/reservation_supervisor
 
-pub fn build(conn: pog.Connection, pepper: String) -> handlers.Handlers {
+pub fn build(
+  conn: pog.Connection,
+  pepper: String,
+  sup: reservation_supervisor.ReservationSupervisor,
+) -> handlers.Handlers {
+  let create_lesson = fn(input) {
+    use lesson <- result.try(lessons_app.create(lessons_rdb.create(conn))(input))
+    let _ = reservation_supervisor.start_actor(sup, lesson.id, lesson.starts_at)
+    Ok(lesson)
+  }
+
   handlers.Handlers(
     auth: auth.new(
       members_app.signup(
@@ -34,13 +46,13 @@ pub fn build(conn: pog.Connection, pepper: String) -> handlers.Handlers {
       ),
     ),
     lessons: lessons.new(
-      conn |> lessons_rdb.create |> lessons_app.create,
+      create_lesson,
       conn |> lessons_rdb.read |> lessons_app.read,
       conn |> lessons_rdb.list |> lessons_app.list,
     ),
     reservations: reservations.new(
       sessions_rdb.find_member_id_by_token(conn),
-      workflows_rdb.create(conn),
+      actor_adaptor.create(sup),
       reservations_app.cancel(
         reservations_rdb.read_reservation_info(conn),
         reservations_rdb.delete_reservation(conn),
