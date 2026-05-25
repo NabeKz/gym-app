@@ -244,15 +244,12 @@ pub fn read_lesson_capacity(
     decode.success(ReadLessonCapacityRow(capacity:, reserved_count:))
   }
 
-  "WITH locked AS (
-  SELECT id FROM app.lessons WHERE id = $1 FOR UPDATE
-)
-SELECT
+  "SELECT
   l.capacity,
   COUNT(r.id)::int AS reserved_count
 FROM app.lessons l
 LEFT JOIN app.reservations r ON r.lesson_id = l.id
-JOIN locked ON locked.id = l.id
+WHERE l.id = $1
 GROUP BY l.capacity;
 "
   |> pog.query

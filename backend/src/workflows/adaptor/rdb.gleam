@@ -3,44 +3,31 @@ import gleam/result
 import gleam/string
 import pog
 import wisp
-import youid/uuid
+import youid/uuid.{type Uuid}
 
 import features/lessons/sql as lessons_sql
 import features/reservations/sql as reservations_sql
 import generated/responses.{type Reservation, Reservation}
 import workflows/create_reservation
 
-pub fn create(conn: pog.Connection) -> create_reservation.CreateReservation {
-  fn(member_id, input) {
-    pog.transaction(conn, fn(tx) {
-      let get_lesson = do_get_lesson(tx, _)
-      let has_reservation = fn(lesson_id, mid) {
-        do_has_reservation(tx, lesson_id, mid)
-      }
-      let save = do_save(tx, _)
-      create_reservation.create(get_lesson, has_reservation, save)(
-        member_id,
-        input,
-      )
-    })
-    |> result.map_error(fn(err) {
-      case err {
-        pog.TransactionRolledBack(msg) -> msg
-        pog.TransactionQueryError(e) -> {
-          wisp.log_error(string.inspect(e))
-          "db error"
-        }
-      }
-    })
-  }
+pub fn get_lesson(conn: pog.Connection) -> create_reservation.GetLesson {
+  do_get_lesson(conn, _)
+}
+
+pub fn has_reservation(conn: pog.Connection) -> create_reservation.HasReservation {
+  fn(lesson_id, member_id) { do_has_reservation(conn, lesson_id, member_id) }
+}
+
+pub fn save_reservation(conn: pog.Connection) -> create_reservation.SaveReservation {
+  do_save(conn, _)
 }
 
 fn do_get_lesson(
-  db: pog.Connection,
-  id: uuid.Uuid,
+  conn: pog.Connection,
+  id: Uuid,
 ) -> Result(create_reservation.LessonInfo, String) {
   use returned <- result.try(
-    db
+    conn
     |> lessons_sql.read_lesson_capacity(id)
     |> result.map_error(fn(e) {
       wisp.log_error(string.inspect(e))
@@ -59,11 +46,11 @@ fn do_get_lesson(
 }
 
 fn do_has_reservation(
-  db: pog.Connection,
-  lesson_id: uuid.Uuid,
-  member_id: uuid.Uuid,
+  conn: pog.Connection,
+  lesson_id: Uuid,
+  member_id: Uuid,
 ) -> Result(Bool, String) {
-  db
+  conn
   |> reservations_sql.read_member_reservation(lesson_id, member_id)
   |> result.map(fn(returned) { !list.is_empty(returned.rows) })
   |> result.map_error(fn(e) {
@@ -73,10 +60,10 @@ fn do_has_reservation(
 }
 
 fn do_save(
-  db: pog.Connection,
+  conn: pog.Connection,
   info: create_reservation.ReservationInfo,
 ) -> Result(Reservation, String) {
-  db
+  conn
   |> reservations_sql.create_reservation(info.id, info.lesson_id, info.member_id)
   |> result.map(fn(_) { Reservation(id: info.id, name: "") })
   |> result.map_error(fn(e) {
