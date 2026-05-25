@@ -131,4 +131,8 @@ table "reservations" {
     columns     = [column.member_id]
     ref_columns = [table.members.column.id]
   }
+
+  unique "reservations_lesson_member_key" {
+    columns = [column.lesson_id, column.member_id]
+  }
 }

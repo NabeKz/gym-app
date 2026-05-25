@@ -12,6 +12,7 @@ import features/reservations/adaptor/rdb as reservations_rdb
 import features/reservations/application as reservations_app
 import features/sessions/adaptor/rdb as sessions_rdb
 import features/sessions/application as sessions_app
+import workflows/adaptor/rdb as workflows_rdb
 
 pub fn build(conn: pog.Connection, pepper: String) -> handlers.Handlers {
   handlers.Handlers(
@@ -39,7 +40,7 @@ pub fn build(conn: pog.Connection, pepper: String) -> handlers.Handlers {
     ),
     reservations: reservations.new(
       sessions_rdb.find_member_id_by_token(conn),
-      reservations_app.create(reservations_rdb.create(conn)),
+      workflows_rdb.create(conn),
       reservations_app.cancel(
         reservations_rdb.read_reservation_info(conn),
         reservations_rdb.delete_reservation(conn),

@@ -218,6 +218,49 @@ GROUP BY l.id
   |> pog.execute(db)
 }
 
+/// A row you get from running the `read_lesson_capacity` query
+/// defined in `./src/features/lessons/sql/read_lesson_capacity.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type ReadLessonCapacityRow {
+  ReadLessonCapacityRow(capacity: Int, reserved_count: Int)
+}
+
+/// Runs the `read_lesson_capacity` query
+/// defined in `./src/features/lessons/sql/read_lesson_capacity.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn read_lesson_capacity(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(ReadLessonCapacityRow), pog.QueryError) {
+  let decoder = {
+    use capacity <- decode.field(0, decode.int)
+    use reserved_count <- decode.field(1, decode.int)
+    decode.success(ReadLessonCapacityRow(capacity:, reserved_count:))
+  }
+
+  "WITH locked AS (
+  SELECT id FROM app.lessons WHERE id = $1 FOR UPDATE
+)
+SELECT
+  l.capacity,
+  COUNT(r.id)::int AS reserved_count
+FROM app.lessons l
+LEFT JOIN app.reservations r ON r.lesson_id = l.id
+JOIN locked ON locked.id = l.id
+GROUP BY l.capacity;
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
 // --- Encoding/decoding utils -------------------------------------------------
 
 /// A decoder to decode `Uuid`s coming from a Postgres query.

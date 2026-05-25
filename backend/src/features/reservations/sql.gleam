@@ -35,17 +35,8 @@ pub fn create_reservation(
     decode.success(CreateReservationRow(id:))
   }
 
-  "WITH capacity_check AS (
-  SELECT l.capacity - COUNT(r.id)::int AS remaining_slots
-  FROM app.lessons l
-  LEFT JOIN app.reservations r ON r.lesson_id = l.id
-  WHERE l.id = $2
-  GROUP BY l.capacity
-)
-INSERT INTO app.reservations (id, lesson_id, member_id)
-SELECT $1, $2, $3
-FROM capacity_check
-WHERE remaining_slots > 0
+  "INSERT INTO app.reservations (id, lesson_id, member_id)
+VALUES ($1, $2, $3)
 RETURNING id;
 "
   |> pog.query
@@ -73,6 +64,45 @@ WHERE id = $1;
 "
   |> pog.query
   |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
+/// A row you get from running the `read_member_reservation` query
+/// defined in `./src/features/reservations/sql/read_member_reservation.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type ReadMemberReservationRow {
+  ReadMemberReservationRow(id: Uuid)
+}
+
+/// Runs the `read_member_reservation` query
+/// defined in `./src/features/reservations/sql/read_member_reservation.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn read_member_reservation(
+  db: pog.Connection,
+  arg_1: Uuid,
+  arg_2: Uuid,
+) -> Result(pog.Returned(ReadMemberReservationRow), pog.QueryError) {
+  let decoder = {
+    use id <- decode.field(0, uuid_decoder())
+    decode.success(ReadMemberReservationRow(id:))
+  }
+
+  "SELECT id
+FROM app.reservations
+WHERE lesson_id = $1
+  AND member_id = $2
+LIMIT 1;
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.parameter(pog.text(uuid.to_string(arg_2)))
   |> pog.returning(decoder)
   |> pog.execute(db)
 }

@@ -5,8 +5,8 @@ import youid/uuid
 
 import app/handlers/auth
 import app/handlers/request as req_helper
-import features/reservations/application
 import features/reservations/application/command
+import workflows/create_reservation
 import features/sessions/application as sessions_app
 import generated/requests
 import generated/responses
@@ -21,7 +21,7 @@ pub type ReservationHandler {
 
 fn create(
   find_session: sessions_app.FindMemberIdByToken,
-  create_fn: application.CreateReservation,
+  create_fn: create_reservation.CreateReservation,
   req: Request,
 ) -> Response {
   use member_id <- require_member_id(find_session, req)
@@ -38,7 +38,7 @@ fn create(
 
 fn cancel(
   find_session: sessions_app.FindMemberIdByToken,
-  cancel_fn: application.Cancel,
+  cancel_fn: command.Cancel,
   req: Request,
   id: String,
 ) -> Response {
@@ -88,8 +88,8 @@ fn unauthorized() -> Response {
 
 pub fn new(
   find_session: sessions_app.FindMemberIdByToken,
-  create_fn: application.CreateReservation,
-  cancel_fn: application.Cancel,
+  create_fn: create_reservation.CreateReservation,
+  cancel_fn: command.Cancel,
 ) -> ReservationHandler {
   ReservationHandler(
     create: create(find_session, create_fn, _),
