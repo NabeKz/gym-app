@@ -17,6 +17,7 @@ pub fn main() {
   let pepper = env.get("PASSWORD_PEPPER") |> result.unwrap("")
 
   let assert Ok(sup) = reservation_supervisor.start(conn)
+  compose.restore_actors(conn, sup)
   let handler = compose.build(conn, pepper, sup)
 
   let secret_key_base = wisp.random_string(64)

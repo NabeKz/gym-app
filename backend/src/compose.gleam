@@ -1,3 +1,4 @@
+import gleam/list
 import gleam/result
 import pog
 
@@ -15,6 +16,19 @@ import features/sessions/adaptor/rdb as sessions_rdb
 import features/sessions/application as sessions_app
 import workflows/adaptor/actor as actor_adaptor
 import workflows/reservation_supervisor
+
+pub fn restore_actors(
+  conn: pog.Connection,
+  sup: reservation_supervisor.ReservationSupervisor,
+) -> Nil {
+  case lessons_rdb.list(conn)(Nil) {
+    Error(_) -> Nil
+    Ok(rows) ->
+      list.each(rows, fn(row) {
+        let _ = reservation_supervisor.start_actor(sup, row.id, row.starts_at)
+      })
+  }
+}
 
 pub fn build(
   conn: pog.Connection,
