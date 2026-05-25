@@ -32,7 +32,10 @@ pub fn start(
   let registry = registry_started.data
 
   let template = fn(args: ActorArgs) {
-    lesson_reservation_actor.start(args.lesson_id, args.starts_at, conn)
+    let on_shutdown = fn(lesson_id) {
+      lesson_reservation_registry.deregister(registry, lesson_id)
+    }
+    lesson_reservation_actor.start(args.lesson_id, args.starts_at, conn, on_shutdown)
   }
 
   use factory_started <- result.try(

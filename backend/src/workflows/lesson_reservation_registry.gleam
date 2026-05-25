@@ -11,6 +11,7 @@ pub opaque type RegistryMessage {
     lesson_id: Uuid,
     subject: process.Subject(lesson_reservation_actor.Message),
   )
+  Deregister(lesson_id: Uuid)
   Lookup(
     lesson_id: Uuid,
     reply_to: process.Subject(
@@ -36,6 +37,13 @@ pub fn register(
   process.send(registry, Register(lesson_id:, subject:))
 }
 
+pub fn deregister(
+  registry: process.Subject(RegistryMessage),
+  lesson_id: Uuid,
+) -> Nil {
+  process.send(registry, Deregister(lesson_id:))
+}
+
 pub fn lookup(
   registry: process.Subject(RegistryMessage),
   lesson_id: Uuid,
@@ -54,6 +62,8 @@ fn handle_message(
   case msg {
     Register(lesson_id:, subject:) ->
       actor.continue(dict.insert(state, lesson_id, subject))
+    Deregister(lesson_id:) ->
+      actor.continue(dict.delete(state, lesson_id))
     Lookup(lesson_id:, reply_to:) -> {
       let result = case dict.get(state, lesson_id) {
         Ok(subject) -> Ok(subject)

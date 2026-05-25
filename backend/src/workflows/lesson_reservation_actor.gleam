@@ -16,7 +16,7 @@ import generated/responses.{type Reservation, Reservation}
 import workflows/create_reservation
 
 pub type ActorState {
-  ActorState(conn: pog.Connection)
+  ActorState(conn: pog.Connection, lesson_id: Uuid, on_shutdown: fn(Uuid) -> Nil)
 }
 
 pub type Message {
@@ -29,9 +29,10 @@ pub type Message {
 }
 
 pub fn start(
-  _lesson_id: Uuid,
+  lesson_id: Uuid,
   starts_at: timestamp.Timestamp,
   conn: pog.Connection,
+  on_shutdown: fn(Uuid) -> Nil,
 ) -> actor.StartResult(process.Subject(Message)) {
   let deadline = timestamp.subtract(starts_at, duration.minutes(15))
   let now = timestamp.system_time()
@@ -43,7 +44,7 @@ pub fn start(
     True -> Error(actor.InitFailed("past deadline"))
     False -> {
       use started <- result.try(
-        actor.new(ActorState(conn:))
+        actor.new(ActorState(conn:, lesson_id:, on_shutdown:))
         |> actor.on_message(handle_message)
         |> actor.start(),
       )
@@ -58,7 +59,10 @@ fn handle_message(
   msg: Message,
 ) -> actor.Next(ActorState, Message) {
   case msg {
-    Shutdown -> actor.stop()
+    Shutdown -> {
+      state.on_shutdown(state.lesson_id)
+      actor.stop()
+    }
     Reserve(reply_to:, member_id:, lesson_id:) -> {
       let result = do_reserve(state.conn, member_id, lesson_id)
       process.send(reply_to, result)
