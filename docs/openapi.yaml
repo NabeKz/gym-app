@@ -75,9 +75,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Reservation"
+  /reservations/me:
+    get:
+      summary: 自分の予約一覧取得
+      description: ログイン中の会員が持つ予約の一覧を返す
+      operationId: getMyReservations
+      responses:
+        "200":
+          description: 予約一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reservation"
+        "401":
+          description: 未認証
+  /reservations/{id}:
+    delete:
+      summary: 予約キャンセル
+      operationId: cancelReservation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: キャンセル完了
+        "401":
+          description: 未認証
+        "403":
+          description: 他の会員の予約
+        "404":
+          description: 予約が存在しない
   /lessons:
     get:
       summary: レッスン一覧取得
+      description: 開催前（現在日時以降）のレッスンを返す
       operationId: getLessons
       parameters:
         - name: date
@@ -213,13 +250,14 @@ components:
       type: object
       required:
         - id
-        - name
+        - lessonId
       properties:
         id:
           type: string
           format: uuid
-        name:
+        lessonId:
           type: string
+          format: uuid
 
     Exercise:
       type: object
