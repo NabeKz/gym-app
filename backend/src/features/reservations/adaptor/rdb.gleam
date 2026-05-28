@@ -6,6 +6,7 @@ import wisp
 import youid/uuid
 
 import features/reservations/application/command
+import features/reservations/application/query
 import features/reservations/sql
 import generated/responses.{type Reservation, Reservation}
 
@@ -26,9 +27,30 @@ fn do_create(
     }),
   )
   case returned.rows {
-    [_] -> Ok(Reservation(id: info.id, name: ""))
+    [_] -> Ok(Reservation(id: info.id, lesson_id: info.lesson_id))
     _ -> Error("no remaining slots")
   }
+}
+
+pub fn list_my_reservations(db: pog.Connection) -> query.ListMyReservationsAdaptor {
+  do_list_my_reservations(db, _)
+}
+
+fn do_list_my_reservations(
+  db: pog.Connection,
+  member_id: uuid.Uuid,
+) -> Result(List(Reservation), String) {
+  use returned <- result.try(
+    db
+    |> sql.list_my_reservations(member_id)
+    |> result.map_error(fn(err) {
+      wisp.log_error(string.inspect(err))
+      "Failed to list reservations"
+    }),
+  )
+  returned.rows
+  |> list.map(fn(row) { Reservation(id: row.id, lesson_id: row.lesson_id) })
+  |> Ok()
 }
 
 pub fn read_reservation_info(db: pog.Connection) -> command.ReadReservationInfo {

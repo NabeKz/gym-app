@@ -72,6 +72,7 @@ pub fn build(
         reservations_rdb.delete_reservation(conn),
         conn |> lessons_rdb.read |> lessons_app.read,
       ),
+      reservations_app.list_my(reservations_rdb.list_my_reservations(conn)),
     ),
   )
 }
