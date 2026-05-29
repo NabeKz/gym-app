@@ -111,6 +111,8 @@ paths:
           description: 他の会員の予約
         "404":
           description: 予約が存在しない
+        "409":
+          description: キャンセル期限切れ
   /lessons:
     get:
       summary: レッスン一覧取得

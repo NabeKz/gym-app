@@ -18,13 +18,13 @@ pub type LessonRow {
 }
 
 pub type ListAdaptor =
-  fn(Nil) -> Result(List(LessonRow), String)
+  fn(Timestamp) -> Result(List(LessonRow), String)
 
 pub type ReadAdaptor =
   fn(uuid.Uuid) -> Result(LessonRow, String)
 
 pub type LessonList =
-  fn(Nil) -> Result(List(Lesson), String)
+  fn(Timestamp) -> Result(List(Lesson), String)
 
 pub type ReadLesson =
   fn(uuid.Uuid) -> Result(Lesson, String)
@@ -42,8 +42,8 @@ fn to_lesson(row: LessonRow) -> Lesson {
   )
 }
 
-fn do_list(adaptor: ListAdaptor, input: Nil) -> Result(List(Lesson), String) {
-  adaptor(input)
+fn do_list(adaptor: ListAdaptor, now: Timestamp) -> Result(List(Lesson), String) {
+  adaptor(now)
   |> result.map(list.map(_, to_lesson))
 }
 

@@ -322,6 +322,11 @@ export type cancelReservationResponse404 = {
   status: 404
 }
 
+export type cancelReservationResponse409 = {
+  data: void
+  status: 409
+}
+
 export type cancelReservationResponseSuccess = cancelReservationResponse204 & {
   headers: Headers
 }
@@ -329,6 +334,7 @@ export type cancelReservationResponseError = (
   | cancelReservationResponse401
   | cancelReservationResponse403
   | cancelReservationResponse404
+  | cancelReservationResponse409
 ) & {
   headers: Headers
 }

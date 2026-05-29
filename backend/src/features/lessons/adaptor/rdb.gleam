@@ -2,6 +2,7 @@ import features/lessons/application
 import gleam/list
 import gleam/result
 import gleam/string
+import gleam/time/timestamp
 import pog
 import wisp
 import youid/uuid
@@ -63,9 +64,9 @@ pub fn read(db: pog.Connection) -> application.ReadAdaptor {
   do_read(db, _)
 }
 
-fn do_list(db: pog.Connection, _input: Nil) -> Result(List(LessonRow), String) {
+fn do_list(db: pog.Connection, now: timestamp.Timestamp) -> Result(List(LessonRow), String) {
   db
-  |> sql.list_lesson()
+  |> sql.list_lesson(now)
   |> result.map(fn(r) {
     list.map(r.rows, fn(row) {
       LessonRow(

@@ -1,14 +1,16 @@
 import { vstack } from "styled-system/patterns"
 import { css } from "styled-system/css"
-import { getLessons } from "@/shared/generated/openapi.gen"
+import { getLessons, getMyReservations } from "@/shared/generated/openapi.gen"
 import { useState, useTransition, Suspense } from "react"
 import { LessonList } from "./ui/lesson-list"
 import { emptyText } from "@/shared/ui/styles"
 
+const fetchAll = () => Promise.all([getLessons(), getMyReservations()])
+
 export const Page = () => {
-  const [lessonsPromise, setLessonsPromise] = useState(() => getLessons())
+  const [promise, setPromise] = useState(fetchAll)
   const [, startTransition] = useTransition()
-  const refetch = () => startTransition(() => setLessonsPromise(getLessons()))
+  const refetch = () => startTransition(() => setPromise(fetchAll()))
 
   return (
     <div className={container}>
@@ -18,7 +20,7 @@ export const Page = () => {
       </header>
 
       <Suspense fallback={<p className={emptyText}>読み込み中…</p>}>
-        <LessonList promise={lessonsPromise} onReserved={refetch} />
+        <LessonList promise={promise} onRefresh={refetch} />
       </Suspense>
     </div>
   )

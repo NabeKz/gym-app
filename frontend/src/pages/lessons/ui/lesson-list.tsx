@@ -1,13 +1,26 @@
 import { vstack, hstack } from "styled-system/patterns"
 import { css, cva } from "styled-system/css"
-import { getLessons } from "@/shared/generated/openapi.gen"
+import { getLessons, getMyReservations } from "@/shared/generated/openapi.gen"
 import { use } from "react"
 import type { Lesson } from "@/shared/generated/openapi.gen"
 import { parseDate, formatDateTime, formatTime } from "@/shared/lib/date"
 import { ReserveButton } from "./reserve-button"
+import { CancelButton } from "./cancel-button"
 import { emptyText } from "@/shared/ui/styles"
 
-const LessonCard = ({ lesson, onReserved }: { lesson: Lesson; onReserved: () => void }) => {
+type LessonsWithReservationsPromise = Promise<
+  [Awaited<ReturnType<typeof getLessons>>, Awaited<ReturnType<typeof getMyReservations>>]
+>
+
+const LessonCard = ({
+  lesson,
+  reservationId,
+  onRefresh,
+}: {
+  lesson: Lesson
+  reservationId: string | undefined
+  onRefresh: () => void
+}) => {
   const startsAt = parseDate(lesson.startsAt)
   const endsAt = parseDate(lesson.endsAt)
 
@@ -34,7 +47,11 @@ const LessonCard = ({ lesson, onReserved }: { lesson: Lesson; onReserved: () => 
       {lesson.description && <p className={descText}>{lesson.description}</p>}
 
       <div className={hstack({ justify: "flex-end" })}>
-        <ReserveButton lesson={lesson} onReserved={onReserved} />
+        {reservationId ? (
+          <CancelButton reservationId={reservationId} onCancelled={onRefresh} />
+        ) : (
+          <ReserveButton lesson={lesson} onReserved={onRefresh} />
+        )}
       </div>
     </div>
   )
@@ -42,12 +59,18 @@ const LessonCard = ({ lesson, onReserved }: { lesson: Lesson; onReserved: () => 
 
 export const LessonList = ({
   promise,
-  onReserved,
+  onRefresh,
 }: {
-  promise: ReturnType<typeof getLessons>
-  onReserved: () => void
+  promise: LessonsWithReservationsPromise
+  onRefresh: () => void
 }) => {
-  const { data: items } = use(promise)
+  const [lessonsResult, reservationsResult] = use(promise)
+  const items = lessonsResult.data
+  const reservationMap = new Map(
+    reservationsResult.status === 200
+      ? reservationsResult.data.map((r) => [r.lessonId, r.id])
+      : [],
+  )
 
   if (items.length === 0) {
     return <p className={emptyText}>現在予約できるレッスンはありません</p>
@@ -56,7 +79,12 @@ export const LessonList = ({
   return (
     <div className={vstack({ gap: "md", alignItems: "stretch", w: "full" })}>
       {items.map((item) => (
-        <LessonCard key={item.id} lesson={item} onReserved={onReserved} />
+        <LessonCard
+          key={item.id}
+          lesson={item}
+          reservationId={reservationMap.get(item.id)}
+          onRefresh={onRefresh}
+        />
       ))}
     </div>
   )
