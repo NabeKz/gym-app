@@ -6,6 +6,7 @@ import youid/uuid
 import app/handlers/auth
 import app/handlers/request as req_helper
 import features/reservations/application/command
+import features/reservations/application as reservations_app
 import workflows/create_reservation
 import features/sessions/application as sessions_app
 import generated/requests
@@ -16,6 +17,7 @@ pub type ReservationHandler {
   ReservationHandler(
     create: fn(Request) -> Response,
     cancel: fn(Request, String) -> Response,
+    list_my: fn(Request) -> Response,
   )
 }
 
@@ -32,6 +34,21 @@ fn create(
       |> responses.encode_reservation
       |> json.to_string
       |> wisp.json_response(201)
+    Error(err) -> wisp.bad_request(err)
+  }
+}
+
+fn list_my(
+  find_session: sessions_app.FindMemberIdByToken,
+  list_my_fn: reservations_app.ListMyReservations,
+  req: Request,
+) -> Response {
+  use member_id <- require_member_id(find_session, req)
+  case list_my_fn(member_id) {
+    Ok(reservations) ->
+      json.array(reservations, responses.encode_reservation)
+      |> json.to_string
+      |> wisp.json_response(200)
     Error(err) -> wisp.bad_request(err)
   }
 }
@@ -90,9 +107,11 @@ pub fn new(
   find_session: sessions_app.FindMemberIdByToken,
   create_fn: create_reservation.CreateReservation,
   cancel_fn: command.Cancel,
+  list_my_fn: reservations_app.ListMyReservations,
 ) -> ReservationHandler {
   ReservationHandler(
     create: create(find_session, create_fn, _),
     cancel: fn(req, id) { cancel(find_session, cancel_fn, req, id) },
+    list_my: list_my(find_session, list_my_fn, _),
   )
 }

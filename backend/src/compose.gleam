@@ -1,6 +1,7 @@
 import gleam/list
 import gleam/result
 import pog
+import shared/date
 
 import app/handlers
 import app/handlers/auth
@@ -21,7 +22,7 @@ pub fn restore_actors(
   conn: pog.Connection,
   sup: reservation_supervisor.ReservationSupervisor,
 ) -> Nil {
-  case lessons_rdb.list(conn)(Nil) {
+  case lessons_rdb.list(conn)(date.now()) {
     Error(_) -> Nil
     Ok(rows) ->
       list.each(rows, fn(row) {
@@ -72,6 +73,7 @@ pub fn build(
         reservations_rdb.delete_reservation(conn),
         conn |> lessons_rdb.read |> lessons_app.read,
       ),
+      reservations_app.list_my(reservations_rdb.list_my_reservations(conn)),
     ),
   )
 }

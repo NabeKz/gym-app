@@ -9,4 +9,6 @@ SELECT
   l.description
 FROM app.lessons l
 LEFT JOIN app.reservations r ON r.lesson_id = l.id
+WHERE l.starts_at > $1
 GROUP BY l.id
+ORDER BY l.starts_at ASC

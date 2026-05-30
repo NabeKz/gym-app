@@ -68,6 +68,46 @@ WHERE id = $1;
   |> pog.execute(db)
 }
 
+/// A row you get from running the `list_my_reservations` query
+/// defined in `./src/features/reservations/sql/list_my_reservations.sql`.
+///
+/// > 🐿️ This type definition was generated automatically using v4.6.0 of the
+/// > [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub type ListMyReservationsRow {
+  ListMyReservationsRow(id: Uuid, lesson_id: Uuid)
+}
+
+/// Runs the `list_my_reservations` query
+/// defined in `./src/features/reservations/sql/list_my_reservations.sql`.
+///
+/// > 🐿️ This function was generated automatically using v4.6.0 of
+/// > the [squirrel package](https://github.com/giacomocavalieri/squirrel).
+///
+pub fn list_my_reservations(
+  db: pog.Connection,
+  arg_1: Uuid,
+) -> Result(pog.Returned(ListMyReservationsRow), pog.QueryError) {
+  let decoder = {
+    use id <- decode.field(0, uuid_decoder())
+    use lesson_id <- decode.field(1, uuid_decoder())
+    decode.success(ListMyReservationsRow(id:, lesson_id:))
+  }
+
+  "SELECT
+    r.id,
+    r.lesson_id
+FROM
+    app.reservations r
+WHERE
+    r.member_id = $1;
+"
+  |> pog.query
+  |> pog.parameter(pog.text(uuid.to_string(arg_1)))
+  |> pog.returning(decoder)
+  |> pog.execute(db)
+}
+
 /// A row you get from running the `read_member_reservation` query
 /// defined in `./src/features/reservations/sql/read_member_reservation.sql`.
 ///

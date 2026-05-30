@@ -10,7 +10,7 @@ pub fn create_reservation_success_test() {
   let lesson_id = uuid.v4()
   let member_id = uuid.v4()
   let input = CreateReservationInput(lesson_id:)
-  let save = fn(_: command.ReservationInfo) { Ok(Reservation(id: uuid.v4(), name: "")) }
+  let save = fn(_: command.ReservationInfo) { Ok(Reservation(id: uuid.v4(), lesson_id: lesson_id)) }
 
   let assert Ok(reservation) = command.create(save)(member_id, input)
 

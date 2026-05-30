@@ -7,6 +7,7 @@ import app/handlers/request
 import app/handlers/response
 import app/handlers/validation
 import features/lessons/application
+import shared/date
 
 pub type LessonHandler {
   LessonHandler(
@@ -40,7 +41,7 @@ fn read(read_lesson: application.ReadLesson, id: String) -> Response {
 }
 
 fn list(list_lesson: application.ListLesson, _req: Request) -> Response {
-  case list_lesson(Nil) {
+  case list_lesson(date.now()) {
     Ok(rows) ->
       rows
       |> json.array(responses.encode_lesson)

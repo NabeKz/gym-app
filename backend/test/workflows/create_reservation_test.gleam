@@ -17,7 +17,7 @@ pub fn create_reservation_success_test() {
   let get_lesson = fn(_) { Ok(fixture_lesson(10, 5)) }
   let has_reservation = fn(_, _) { Ok(False) }
   let save = fn(_: create_reservation.ReservationInfo) {
-    Ok(Reservation(id: uuid.v4(), name: "test"))
+    Ok(Reservation(id: uuid.v4(), lesson_id: lesson_id))
   }
 
   create_reservation.create(get_lesson, has_reservation, save)(member_id, input)

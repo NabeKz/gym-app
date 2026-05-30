@@ -4,6 +4,7 @@ jq = "latest"
 bun = "latest"
 gh = "latest"
 lefthook = "latest"
+"github:rin2yh/pumlv" = "latest"
 
 [tasks.dev-all]
 description = "dev-all"

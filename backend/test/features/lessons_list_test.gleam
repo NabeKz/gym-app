@@ -21,9 +21,14 @@ fn fixture_row() -> query.LessonRow {
   )
 }
 
+fn fixture_now() -> timestamp.Timestamp {
+  let assert Ok(now) = timestamp.parse_rfc3339("2026-05-16T09:00:00Z")
+  now
+}
+
 pub fn list_lessons_success_test() {
   let row = fixture_row()
-  let adaptor = fn(_: Nil) { Ok([row]) }
+  let adaptor = fn(_: timestamp.Timestamp) { Ok([row]) }
   let expected = [
     Lesson(
       id: row.id,
@@ -37,17 +42,17 @@ pub fn list_lessons_success_test() {
     ),
   ]
 
-  query.list(adaptor)(Nil) |> should.equal(Ok(expected))
+  query.list(adaptor)(fixture_now()) |> should.equal(Ok(expected))
 }
 
 pub fn list_lessons_empty_test() {
-  let adaptor = fn(_: Nil) { Ok([]) }
+  let adaptor = fn(_: timestamp.Timestamp) { Ok([]) }
 
-  query.list(adaptor)(Nil) |> should.equal(Ok([]))
+  query.list(adaptor)(fixture_now()) |> should.equal(Ok([]))
 }
 
 pub fn list_lessons_adaptor_error_test() {
-  let adaptor = fn(_: Nil) { Error("db error") }
+  let adaptor = fn(_: timestamp.Timestamp) { Error("db error") }
 
-  query.list(adaptor)(Nil) |> should.be_error
+  query.list(adaptor)(fixture_now()) |> should.be_error
 }

@@ -108,6 +108,7 @@ pub type ListLessonRow {
 ///
 pub fn list_lesson(
   db: pog.Connection,
+  arg_1: Timestamp,
 ) -> Result(pog.Returned(ListLessonRow), pog.QueryError) {
   let decoder = {
     use id <- decode.field(0, uuid_decoder())
@@ -141,9 +142,12 @@ pub fn list_lesson(
   l.description
 FROM app.lessons l
 LEFT JOIN app.reservations r ON r.lesson_id = l.id
+WHERE l.starts_at > $1
 GROUP BY l.id
+ORDER BY l.starts_at ASC
 "
   |> pog.query
+  |> pog.parameter(pog.timestamp(arg_1))
   |> pog.returning(decoder)
   |> pog.execute(db)
 }

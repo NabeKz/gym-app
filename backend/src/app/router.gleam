@@ -62,6 +62,7 @@ pub fn reservations(
 ) {
   case path, req.method {
     [], http.Post -> req |> h.create()
+    ["me"], http.Get -> req |> h.list_my()
     [id], http.Delete -> req |> h.cancel(id)
     _, _ -> wisp.not_found()
   }

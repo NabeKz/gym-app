@@ -45,7 +45,7 @@ export interface Lesson {
 
 export interface Reservation {
   id: string
-  name: string
+  lessonId: string
 }
 
 export interface Exercise {
@@ -257,6 +257,113 @@ export const createReservation = async (
 }
 
 /**
+ * ログイン中の会員が持つ予約の一覧を返す
+ * @summary 自分の予約一覧取得
+ */
+export type getMyReservationsResponse200 = {
+  data: Reservation[]
+  status: 200
+}
+
+export type getMyReservationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getMyReservationsResponseSuccess = getMyReservationsResponse200 & {
+  headers: Headers
+}
+export type getMyReservationsResponseError = getMyReservationsResponse401 & {
+  headers: Headers
+}
+
+export type getMyReservationsResponse =
+  | getMyReservationsResponseSuccess
+  | getMyReservationsResponseError
+
+export const getGetMyReservationsUrl = () => {
+  return `/api/reservations/me`
+}
+
+export const getMyReservations = async (
+  options?: RequestInit,
+): Promise<getMyReservationsResponse> => {
+  const res = await fetch(getGetMyReservationsUrl(), {
+    ...options,
+    method: "GET",
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: getMyReservationsResponse["data"] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getMyReservationsResponse
+}
+
+/**
+ * @summary 予約キャンセル
+ */
+export type cancelReservationResponse204 = {
+  data: void
+  status: 204
+}
+
+export type cancelReservationResponse401 = {
+  data: void
+  status: 401
+}
+
+export type cancelReservationResponse403 = {
+  data: void
+  status: 403
+}
+
+export type cancelReservationResponse404 = {
+  data: void
+  status: 404
+}
+
+export type cancelReservationResponse409 = {
+  data: void
+  status: 409
+}
+
+export type cancelReservationResponseSuccess = cancelReservationResponse204 & {
+  headers: Headers
+}
+export type cancelReservationResponseError = (
+  | cancelReservationResponse401
+  | cancelReservationResponse403
+  | cancelReservationResponse404
+  | cancelReservationResponse409
+) & {
+  headers: Headers
+}
+
+export type cancelReservationResponse =
+  | cancelReservationResponseSuccess
+  | cancelReservationResponseError
+
+export const getCancelReservationUrl = (id: string) => {
+  return `/api/reservations/${id}`
+}
+
+export const cancelReservation = async (
+  id: string,
+  options?: RequestInit,
+): Promise<cancelReservationResponse> => {
+  const res = await fetch(getCancelReservationUrl(id), {
+    ...options,
+    method: "DELETE",
+  })
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
+
+  const data: cancelReservationResponse["data"] = body ? JSON.parse(body) : undefined
+  return { data, status: res.status, headers: res.headers } as cancelReservationResponse
+}
+
+/**
+ * 開催前（現在日時以降）のレッスンを返す
  * @summary レッスン一覧取得
  */
 export type getLessonsResponse200 = {

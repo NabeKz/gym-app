@@ -65,7 +65,7 @@ fn do_save(
 ) -> Result(Reservation, String) {
   conn
   |> reservations_sql.create_reservation(info.id, info.lesson_id, info.member_id)
-  |> result.map(fn(_) { Reservation(id: info.id, name: "") })
+  |> result.map(fn(_) { Reservation(id: info.id, lesson_id: info.lesson_id) })
   |> result.map_error(fn(e) {
     wisp.log_error(string.inspect(e))
     "Failed to create reservation"

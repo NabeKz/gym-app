@@ -48,14 +48,14 @@ pub fn encode_lesson(value: Lesson) -> json.Json {
 pub type Reservation {
   Reservation(
     id: Uuid,
-    name: String,
+    lesson_id: Uuid,
   )
 }
 
 pub fn encode_reservation(value: Reservation) -> json.Json {
   json.object([
     #("id", json.string(uuid.to_string(value.id))),
-    #("name", json.string(value.name)),
+    #("lessonId", json.string(uuid.to_string(value.lesson_id))),
   ])
 }
 
