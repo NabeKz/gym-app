@@ -1,0 +1,34 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - backend/src/**
+      - backend/test/**
+  pull_request:
+    branches: [main]
+    paths:
+      - backend/src/**
+      - backend/test/**
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
+
+      - name: Run tests
+        run: mise run test
+
+      - name: Write step summary
+        if: always()
+        run: mise run test-summary

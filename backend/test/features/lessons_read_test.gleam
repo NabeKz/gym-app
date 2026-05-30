@@ -21,6 +21,7 @@ fn fixture_row() -> query.LessonRow {
   )
 }
 
+// test: ID を指定してレッスンを取得できる
 pub fn read_lesson_success_test() {
   let row = fixture_row()
   let adaptor = fn(_: uuid.Uuid) { Ok(row) }
@@ -39,6 +40,7 @@ pub fn read_lesson_success_test() {
   query.read(adaptor)(uuid.v4()) |> should.equal(Ok(expected))
 }
 
+// test: 存在しない ID はエラー
 pub fn read_lesson_not_found_test() {
   let adaptor = fn(_: uuid.Uuid) { Error("not found") }
 

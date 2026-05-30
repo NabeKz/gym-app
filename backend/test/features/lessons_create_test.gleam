@@ -5,6 +5,7 @@ import generated/requests.{CreateLessonInput}
 import generated/responses.{type Lesson}
 import gleeunit/should
 
+// test: レッスンを正常に作成できる
 pub fn create_lesson_success_test() {
   let input = CreateLessonInput(
     name: "ヨガ",
@@ -24,6 +25,7 @@ pub fn create_lesson_success_test() {
   lesson.description |> should.equal("初心者向け")
 }
 
+// test: 作成直後の remaining_slots は capacity と同じになる
 pub fn create_lesson_remaining_slots_equals_capacity_test() {
   let input = CreateLessonInput(
     name: "ヨガ",
@@ -40,6 +42,7 @@ pub fn create_lesson_remaining_slots_equals_capacity_test() {
   lesson.remaining_slots |> should.equal(lesson.capacity)
 }
 
+// test: DB エラー時は Error を返す
 pub fn create_lesson_adaptor_error_test() {
   let input = CreateLessonInput(
     name: "ヨガ",

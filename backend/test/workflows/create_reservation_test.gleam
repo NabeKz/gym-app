@@ -10,6 +10,7 @@ fn fixture_lesson(capacity: Int, reserved_count: Int) {
   create_reservation.LessonInfo(capacity:, reserved_count:)
 }
 
+// test: 空きがある場合は予約を作成できる
 pub fn create_reservation_success_test() {
   let lesson_id = uuid.v4()
   let member_id = uuid.v4()
@@ -24,7 +25,7 @@ pub fn create_reservation_success_test() {
   |> should.be_ok
 }
 
-// 満席のレッスンは予約できない
+// test: 満席のレッスンは予約できない
 pub fn create_reservation_full_test() {
   let input = CreateReservationInput(lesson_id: uuid.v4())
   let get_lesson = fn(_) { Ok(fixture_lesson(10, 10)) }
@@ -35,7 +36,7 @@ pub fn create_reservation_full_test() {
   |> should.equal(Error("full"))
 }
 
-// 同じレッスンを二重予約できない
+// test: 同じレッスンを二重予約できない
 pub fn create_reservation_duplicate_test() {
   let input = CreateReservationInput(lesson_id: uuid.v4())
   let get_lesson = fn(_) { Ok(fixture_lesson(10, 5)) }

@@ -26,6 +26,7 @@ fn fixture_now() -> timestamp.Timestamp {
   now
 }
 
+// test: 開催前のレッスン一覧を取得できる
 pub fn list_lessons_success_test() {
   let row = fixture_row()
   let adaptor = fn(_: timestamp.Timestamp) { Ok([row]) }
@@ -45,12 +46,14 @@ pub fn list_lessons_success_test() {
   query.list(adaptor)(fixture_now()) |> should.equal(Ok(expected))
 }
 
+// test: 開催前のレッスンがない場合は空リストを返す
 pub fn list_lessons_empty_test() {
   let adaptor = fn(_: timestamp.Timestamp) { Ok([]) }
 
   query.list(adaptor)(fixture_now()) |> should.equal(Ok([]))
 }
 
+// test: DB エラー時は Error を返す
 pub fn list_lessons_adaptor_error_test() {
   let adaptor = fn(_: timestamp.Timestamp) { Error("db error") }
 

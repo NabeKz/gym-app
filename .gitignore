@@ -1,3 +1,4 @@
 
 backend/.env.keys
 mise.local.toml
+backend/scripts/node_modules

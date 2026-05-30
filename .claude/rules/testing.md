@@ -53,9 +53,11 @@ pub fn create_lesson_success_test() {
 
 ## テスト関数の命名
 
-`<usecase>_<scenario>_test` の形式にする。観点は関数名の英訳 + コメントで日本語補足。
+`<usecase>_<scenario>_test` の形式にする。
+
+関数の1行上に `// test: <日本語名>` を書くと、CI の Step Summary にテスト名として表示される。
 
 ```gleam
-// remaining_slots は capacity と同じになる
+// test: 作成直後の remaining_slots は capacity と同じになる
 pub fn create_lesson_remaining_slots_equals_capacity_test() { ... }
 ```

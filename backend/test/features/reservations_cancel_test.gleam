@@ -20,8 +20,8 @@ fn fixture_lesson(lesson_id: uuid.Uuid, starts_at: timestamp.Timestamp) -> Lesso
   )
 }
 
+// test: 認証済み・自分の予約・開始前 → キャンセル成功
 pub fn cancel_success_test() {
-  // 認証済み・自分の予約・レッスン開始前 → Ok(Nil)
   let reservation_id = uuid.v4()
   let member_id = uuid.v4()
   let lesson_id = uuid.v4()
@@ -38,8 +38,8 @@ pub fn cancel_success_test() {
   |> should.equal(Ok(Nil))
 }
 
+// test: 他会員の予約はキャンセルできない
 pub fn cancel_not_own_reservation_test() {
-  // 他会員の予約 → Error
   let reservation_id = uuid.v4()
   let member_id = uuid.v4()
   let other_member_id = uuid.v4()
@@ -58,8 +58,8 @@ pub fn cancel_not_own_reservation_test() {
   |> should.be_error
 }
 
+// test: 存在しない予約 ID はエラー
 pub fn cancel_not_found_test() {
-  // 存在しない予約 ID → Error
   let assert Ok(now) = timestamp.parse_rfc3339("2026-05-17T09:00:00Z")
 
   let read_reservation = fn(_: uuid.Uuid) { Error("not found") }
@@ -71,8 +71,8 @@ pub fn cancel_not_found_test() {
   |> should.be_error
 }
 
+// test: 開始済みレッスンの予約はキャンセルできない
 pub fn cancel_after_lesson_starts_test() {
-  // レッスン開始済み → Error
   let reservation_id = uuid.v4()
   let member_id = uuid.v4()
   let lesson_id = uuid.v4()
