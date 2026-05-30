@@ -24,16 +24,12 @@ export const CancelButton = ({
   const handleCancel = () => {
     startTransition(async () => {
       setState("pending")
-      try {
-        const result = toResult(await cancelReservation(reservationId))
-        if (isOk(result)) {
-          setState("success")
-          onCancelled()
-        } else {
-          setState(result.status === 409 ? "deadline_passed" : "error")
-        }
-      } catch {
-        setState("error")
+      const result = await toResult(cancelReservation(reservationId))
+      if (isOk(result)) {
+        setState("success")
+        onCancelled()
+      } else {
+        setState(result.status === 409 ? "deadline_passed" : "error")
       }
     })
   }

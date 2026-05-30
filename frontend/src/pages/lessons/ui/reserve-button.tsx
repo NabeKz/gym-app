@@ -3,8 +3,9 @@ import { css, cva } from "styled-system/css"
 import { createReservation } from "@/shared/generated/openapi.gen"
 import { useState, useTransition } from "react"
 import type { Lesson } from "@/shared/generated/openapi.gen"
+import { isOk, toResult } from "@/shared/lib/api"
 
-type ReserveState = "idle" | "pending" | "success" | "error"
+type ReserveState = "idle" | "pending" | "success" | "conflict" | "error"
 
 export const ReserveButton = ({
   lesson,
@@ -21,12 +22,12 @@ export const ReserveButton = ({
   const handleReserve = () => {
     startTransition(async () => {
       setState("pending")
-      try {
-        await createReservation({ lesson_id: lesson.id })
+      const result = await toResult(createReservation({ lesson_id: lesson.id }))
+      if (isOk(result)) {
         setState("success")
         onReserved()
-      } catch {
-        setState("error")
+      } else {
+        setState(result.status === 409 ? "conflict" : "error")
       }
     })
   }
@@ -37,6 +38,7 @@ export const ReserveButton = ({
 
   return (
     <div className={hstack({ gap: "sm", border: "1px solid" })}>
+      {state === "conflict" && <span className={errorText}>満席または予約済みです</span>}
       {state === "error" && <span className={errorText}>予約に失敗しました</span>}
       <button
         onClick={handleReserve}
