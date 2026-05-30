@@ -2,7 +2,7 @@
 atlas = "latest"
 bun = "latest"
 dotenvx = "latest"
-erlang = "latest"
+erlang = "28"
 gleam = "latest"
 rebar = "latest"
 watchexec = "latest"
