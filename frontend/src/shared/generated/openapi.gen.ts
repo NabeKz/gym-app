@@ -224,16 +224,40 @@ export const getMe = async (options?: RequestInit): Promise<getMeResponse> => {
 /**
  * @summary 予約作成
  */
-export type createReservationResponse200 = {
+export type createReservationResponse201 = {
   data: Reservation
-  status: 200
+  status: 201
 }
 
-export type createReservationResponseSuccess = createReservationResponse200 & {
+export type createReservationResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createReservationResponse404 = {
+  data: void
+  status: 404
+}
+
+export type createReservationResponse409 = {
+  data: void
+  status: 409
+}
+
+export type createReservationResponseSuccess = createReservationResponse201 & {
+  headers: Headers
+}
+export type createReservationResponseError = (
+  | createReservationResponse401
+  | createReservationResponse404
+  | createReservationResponse409
+) & {
   headers: Headers
 }
 
-export type createReservationResponse = createReservationResponseSuccess
+export type createReservationResponse =
+  | createReservationResponseSuccess
+  | createReservationResponseError
 
 export const getCreateReservationUrl = () => {
   return `/api/reservations`

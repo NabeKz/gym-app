@@ -34,6 +34,9 @@ fn create(
       |> responses.encode_reservation
       |> json.to_string
       |> wisp.json_response(201)
+    Error("not found") -> wisp.not_found()
+    Error("already reserved") -> wisp.response(409)
+    Error("full") -> wisp.response(409)
     Error(err) -> wisp.bad_request(err)
   }
 }

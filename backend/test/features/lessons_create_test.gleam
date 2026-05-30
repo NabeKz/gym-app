@@ -42,6 +42,21 @@ pub fn create_lesson_remaining_slots_equals_capacity_test() {
   lesson.remaining_slots |> should.equal(lesson.capacity)
 }
 
+// test: starts_at と ends_at が同じ場合はエラー
+pub fn create_lesson_starts_at_equals_ends_at_test() {
+  let input = CreateLessonInput(
+    name: "ヨガ",
+    instructor: "田中",
+    starts_at: "2026-05-16T10:00:00Z",
+    ends_at: "2026-05-16T10:00:00Z",
+    capacity: 10,
+    description: "",
+  )
+  let save = fn(lesson: Lesson) { Ok(lesson) }
+
+  command.create(save)(input) |> should.be_error
+}
+
 // test: DB エラー時は Error を返す
 pub fn create_lesson_adaptor_error_test() {
   let input = CreateLessonInput(

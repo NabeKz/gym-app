@@ -46,3 +46,25 @@ pub fn create_reservation_duplicate_test() {
   create_reservation.create(get_lesson, has_reservation, save)(uuid.v4(), input)
   |> should.equal(Error("already reserved"))
 }
+
+// test: 存在しないレッスンは予約できない
+pub fn create_reservation_lesson_not_found_test() {
+  let input = CreateReservationInput(lesson_id: uuid.v4())
+  let get_lesson = fn(_) { Error("not found") }
+  let has_reservation = fn(_, _) { Ok(False) }
+  let save = fn(_: create_reservation.ReservationInfo) { Error("unreachable") }
+
+  create_reservation.create(get_lesson, has_reservation, save)(uuid.v4(), input)
+  |> should.be_error
+}
+
+// test: DB エラー時は Error を返す
+pub fn create_reservation_save_error_test() {
+  let input = CreateReservationInput(lesson_id: uuid.v4())
+  let get_lesson = fn(_) { Ok(fixture_lesson(10, 5)) }
+  let has_reservation = fn(_, _) { Ok(False) }
+  let save = fn(_: create_reservation.ReservationInfo) { Error("db error") }
+
+  create_reservation.create(get_lesson, has_reservation, save)(uuid.v4(), input)
+  |> should.be_error
+}
