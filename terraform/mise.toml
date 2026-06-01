@@ -1,0 +1,6 @@
+[tools]
+terraform = "latest"
+
+[tasks.database-url]
+description = "Print DATABASE_URL from terraform state"
+run = "terraform output -raw database_url"

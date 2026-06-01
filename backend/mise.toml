@@ -49,11 +49,13 @@ run = """
 
 [tasks.db-apply]
 description = "Apply schema to database (declarative migration)"
-run = "atlas schema apply --env local --auto-approve"
+usage = "arg <env> default:'local'"
+run = "atlas schema apply --env {{arg(name='env')}} --auto-approve"
 
 [tasks.db-plan]
 description = "Preview schema diff without applying"
-run = "atlas schema apply --env local --dry-run"
+usage = "flag --env <env> default:'local'"
+run = "atlas schema apply --env {{flag(name='env')}} --dry-run"
 
 [tasks.db-seed]
 description = "Insert seed data via usecase layer"

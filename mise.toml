@@ -6,6 +6,14 @@ gh = "latest"
 lefthook = "latest"
 "github:rin2yh/pumlv" = "latest"
 
+[tasks.db-apply-neon]
+description = "Apply schema to Neon DB (reads DATABASE_URL from terraform output)"
+run = """
+export DATABASE_URL=$(mise -C terraform run database-url)
+export DEV_DATABASE_URL="docker://postgres/17/dev"
+mise -C backend run db-apply neon
+"""
+
 [tasks.dev-all]
 description = "dev-all"
 depends = ["dev-backend", "dev-frontend"]
