@@ -1,8 +1,8 @@
 pre-commit:
   commands:
-    gen-erd:
-      run: mise -C backend run gen-erd && git add docs/erd.md
-      stage_fixed: true
+    # gen-erd:
+    #   run: mise -C backend run gen-erd && git add docs/erd.md
+    #   stage_fixed: true
     gen-openapi:
       glob: "docs/openapi.yaml"
       run: mise run codegen && git add backend/src/generated/ frontend/src/shared/generated/

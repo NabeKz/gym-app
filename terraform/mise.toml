@@ -1,4 +1,5 @@
 [tools]
+"github:superfly/flyctl" = "latest"
 terraform = "latest"
 
 [tasks.database-url]
