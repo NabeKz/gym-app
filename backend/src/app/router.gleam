@@ -17,6 +17,8 @@ pub fn handle_request(handlers: handlers.Handlers) {
         wisp.ok()
       }
 
+      ["health"] -> wisp.ok()
+
       ["auth", ..path] -> req |> auth_routes(path, handlers.auth)
       ["lessons", ..path] -> req |> lessons(path, handlers.lessons)
       ["reservations", ..path] -> req |> reservations(path, handlers.reservations)

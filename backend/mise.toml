@@ -47,6 +47,12 @@ run = """
   watchexec -w src -r --stop-timeout 0 --stop-signal SIGKILL -- gleam run
 """
 
+[tasks.deploy]
+description = "Deploy backend to fly.io (erlang version is sourced from mise.toml)"
+run = """
+  fly deploy --build-arg ERLANG_VERSION=$(mise config get tools.erlang)
+"""
+
 [tasks.db-apply]
 description = "Apply schema to database (declarative migration)"
 usage = "arg <env> default:'local'"

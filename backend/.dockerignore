@@ -1,0 +1,11 @@
+build
+test
+test-results
+db
+scripts
+compose.yml
+atlas.hcl
+README.md
+.dockerignore
+Dockerfile
+fly.toml
