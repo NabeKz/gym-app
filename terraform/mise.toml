@@ -5,3 +5,11 @@ terraform = "latest"
 [tasks.database-url]
 description = "Print DATABASE_URL from terraform state"
 run = "terraform output -raw database_url"
+
+[tasks.atlas-url]
+description = "Print atlas target URL (Neon, with endpoint option) from terraform state"
+run = "terraform output -raw atlas_url"
+
+[tasks.dev-database-url]
+description = "Print DEV_DATABASE_URL (atlas scratch DB) from terraform state"
+run = "terraform output -raw dev_database_url"
