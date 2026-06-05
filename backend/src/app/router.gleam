@@ -7,9 +7,12 @@ import app/handlers
 import app/handlers/lessons
 import app/middleware.{middleware}
 
-pub fn handle_request(handlers: handlers.Handlers) {
+pub fn handle_request(
+  handlers: handlers.Handlers,
+  allowed_origins: List(String),
+) {
   fn(req: Request) -> Response {
-    use req <- middleware(req)
+    use req <- middleware(req, allowed_origins)
 
     case wisp.path_segments(req) {
       [] -> {

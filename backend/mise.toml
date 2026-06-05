@@ -6,6 +6,7 @@ erlang = "28"
 gleam = "latest"
 rebar = "latest"
 watchexec = "latest"
+"github:superfly/flyctl" = "latest"
 
 [env]
 DATABASE_URL = "postgresql://postgres:dev@localhost:5432/gym_app"
@@ -50,18 +51,37 @@ run = """
 [tasks.deploy]
 description = "Deploy backend to fly.io (erlang version is sourced from mise.toml)"
 run = """
-  fly deploy --build-arg ERLANG_VERSION=$(mise config get tools.erlang)
+  flyctl deploy --build-arg ERLANG_VERSION=$(mise config get tools.erlang)
 """
 
 [tasks.db-apply]
 description = "Apply schema to database (declarative migration)"
-usage = "arg <env> default:'local'"
-run = "atlas schema apply --env {{arg(name='env')}} --auto-approve"
+usage = 'arg "<env>" default="local"'
+run = 'atlas schema apply --env "$usage_env" --auto-approve'
 
 [tasks.db-plan]
 description = "Preview schema diff without applying"
-usage = "flag --env <env> default:'local'"
-run = "atlas schema apply --env {{flag(name='env')}} --dry-run"
+usage = 'flag "--env <env>" default="local"'
+run = 'atlas schema apply --env "$usage_env" --dry-run'
+
+# Neon 向け。[env] のローカル DATABASE_URL をインラインで上書きし、terraform state
+# から取得する。atlas 用 URL は endpoint オプション付き（lib/pq が SNI 非対応のため）。
+# dev DB は本番とは別の Neon データベース(atlas_dev)を使う（docker 不要）。
+[tasks.db-plan-neon]
+description = "Preview schema diff against Neon DB"
+run = """
+  DATABASE_URL="$(mise -C ../terraform run atlas-url)" \
+  DEV_DATABASE_URL="$(mise -C ../terraform run dev-database-url)" \
+  atlas schema apply --env neon --dry-run
+"""
+
+[tasks.db-apply-neon]
+description = "Apply schema to Neon DB"
+run = """
+  DATABASE_URL="$(mise -C ../terraform run atlas-url)" \
+  DEV_DATABASE_URL="$(mise -C ../terraform run dev-database-url)" \
+  atlas schema apply --env neon --auto-approve
+"""
 
 [tasks.db-seed]
 description = "Insert seed data via usecase layer"
