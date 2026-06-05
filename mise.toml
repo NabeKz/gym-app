@@ -59,9 +59,9 @@ run = """
 
 [tasks.puml-view]
 description = "Render PlantUML file via server and preview in terminal"
-usage = "arg <file>"
+usage = 'arg "<file>"'
 run = """
-  FILE={{arg(name='file')}}
+  FILE="$usage_file"
   curl -sf "http://localhost:8080/" > /dev/null 2>&1 || { echo "PlantUML server is not running. Start it with: mise run puml"; exit 1; }
   ENCODED=$(curl -s -D - -o /dev/null -X POST "http://localhost:8080/form" \
     --data-urlencode "text@$FILE" \
@@ -71,9 +71,9 @@ run = """
 
 [tasks.puml-watch]
 description = "Watch PlantUML file and auto-preview on save"
-usage = "arg <file>"
+usage = 'arg "<file>"'
 run = """
-  FILE={{arg(name='file')}}
+  FILE="$usage_file"
   render() {
     curl -sf "http://localhost:8080/" > /dev/null 2>&1 || { echo "PlantUML server is not running. Start it with: mise run puml"; return; }
     ENCODED=$(curl -s -D - -o /dev/null -X POST "http://localhost:8080/form" \
@@ -103,9 +103,9 @@ run = """
 
 [tasks.puml-open]
 description = "Open PlantUML file in browser via server"
-usage = "arg <file>"
+usage = 'arg "<file>"'
 run = """
-  FILE={{arg(name='file')}}
+  FILE="$usage_file"
   curl -sf "http://localhost:8080/" > /dev/null 2>&1 || { echo "PlantUML server is not running. Start it with: mise run puml"; exit 1; }
   ENCODED=$(curl -s -D - -o /dev/null -X POST "http://localhost:8080/form" \
     --data-urlencode "text@$FILE" \
