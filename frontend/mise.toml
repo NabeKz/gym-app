@@ -1,6 +1,7 @@
 [tools]
 node = "latest"
 pnpm = "latest"
+wrangler = "latest"
 
 [tasks.gen]
 description = "Generate TypeScript client from openapi.yaml"
@@ -10,4 +11,11 @@ run = "pnpm gen"
 description = "dev"
 run = """
   pnpm dev
+"""
+
+[tasks.deploy]
+description = "Build and deploy frontend to Cloudflare Workers"
+run = """
+  pnpm build
+  wrangler deploy
 """
