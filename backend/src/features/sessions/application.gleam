@@ -6,8 +6,11 @@ pub type Login =
 pub type Logout =
   command.Logout
 
-pub type FindMemberByEmail =
-  command.FindMemberByEmail
+pub type Authenticate =
+  command.Authenticate
+
+pub type FindMember =
+  command.FindMember
 
 pub type SaveSession =
   command.SaveSession
@@ -17,9 +20,6 @@ pub type DeleteSession =
 
 pub type FindMemberIdByToken =
   command.FindMemberIdByToken
-
-pub type FindMemberById =
-  command.FindMemberById
 
 pub type Me =
   command.Me
