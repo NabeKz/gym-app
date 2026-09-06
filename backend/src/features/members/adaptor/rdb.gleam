@@ -1,5 +1,6 @@
 import domain/member.{type MemberRecord, MemberRecord}
 import features/members/application/command
+import features/members/application/query
 import features/members/sql
 import gleam/list
 import gleam/result
@@ -8,7 +9,10 @@ import pog
 import wisp
 import youid/uuid
 
-fn do_save(db: pog.Connection, record: MemberRecord) -> Result(MemberRecord, String) {
+fn do_save(
+  db: pog.Connection,
+  record: MemberRecord,
+) -> Result(MemberRecord, String) {
   db
   |> sql.create_member(
     record.id,
@@ -53,7 +57,7 @@ pub fn find_by_email(db: pog.Connection) -> command.FindMemberByEmail {
   do_find_by_email(db, _)
 }
 
-pub fn find_by_id(db: pog.Connection) -> command.FindMemberById {
+pub fn find_by_id(db: pog.Connection) -> query.FindMemberById {
   do_find_by_id(db, _)
 }
 

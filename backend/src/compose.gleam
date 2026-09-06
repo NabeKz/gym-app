@@ -50,14 +50,13 @@ pub fn build(
         pepper,
       ),
       sessions_app.login(
-        members_rdb.find_by_email(conn),
+        members_app.authenticate(members_rdb.find_by_email(conn), pepper),
         sessions_rdb.save_session(conn),
-        pepper,
       ),
       sessions_app.logout(sessions_rdb.delete_session(conn)),
       sessions_app.me(
         sessions_rdb.find_member_id_by_token(conn),
-        members_rdb.find_by_id(conn),
+        conn |> members_rdb.find_by_id |> members_app.find,
       ),
     ),
     lessons: lessons.new(

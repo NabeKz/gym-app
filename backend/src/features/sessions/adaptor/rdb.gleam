@@ -30,10 +30,7 @@ pub fn save_session(db: pog.Connection) -> command.SaveSession {
   }
 }
 
-fn do_delete_session(
-  db: pog.Connection,
-  token: String,
-) -> Result(Nil, String) {
+fn do_delete_session(db: pog.Connection, token: String) -> Result(Nil, String) {
   db
   |> sql.delete_session(token)
   |> result.map(fn(_) { Nil })
@@ -47,11 +44,16 @@ pub fn delete_session(db: pog.Connection) -> command.DeleteSession {
   do_delete_session(db, _)
 }
 
-pub fn find_member_id_by_token(db: pog.Connection) -> command.FindMemberIdByToken {
+pub fn find_member_id_by_token(
+  db: pog.Connection,
+) -> command.FindMemberIdByToken {
   do_find_member_id_by_token(db, _)
 }
 
-fn do_find_member_id_by_token(db: pog.Connection, token: String) -> Result(uuid.Uuid, String) {
+fn do_find_member_id_by_token(
+  db: pog.Connection,
+  token: String,
+) -> Result(uuid.Uuid, String) {
   use returned <- result.try(
     db
     |> sql.find_session_by_token(token)
